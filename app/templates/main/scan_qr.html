@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Scan QR Code - Attendance Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Scan Student QR Code</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div id="reader" style="width: 100%"></div>
+                        <div id="status" class="alert alert-warning mt-2">
+                            <p>Camera will start automatically...</p>
+                            <p>If camera access is denied, check your browser settings:</p>
+                            <ol class="text-start">
+                                <li>Open Chrome Settings</li>
+                                <li>Go to Site Settings or Privacy and security</li>
+                                <li>Find Camera permissions</li>
+                                <li>Allow access for this site</li>
+                            </ol>
+                        </div>
+                        <button id="startButton" class="btn btn-primary mt-3">Scan</button>
+                        <button id="checkPermissions" class="btn btn-secondary mt-3 ms-2 d-none">Check Permissions</button>
+                    </div>
+                    <div id="result" class="alert alert-info" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const status = document.getElementById('status');
+        const startButton = document.getElementById('startButton');
+        const checkPermissionsButton = document.getElementById('checkPermissions');
+        const result = document.getElementById('result');
+        let html5QrCode = null;
+
+        function updateStatus(message) {
+            console.log(message);
+            status.innerHTML = message;
+        }
+
+        // Check if we're on localhost, local network, or a secure connection
+        function isSecureContext() {
+            // Check for standard secure contexts
+            if (window.isSecureContext) return true;
+
+            const hostname = window.location.hostname;
+            
+            // Allow localhost and local IP addresses
+            if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+            
+            // Allow local network IP addresses (192.168.x.x)
+            if (/^192\.168\.\d+\.\d+$/.test(hostname)) return true;
+            
+            // Allow other common local network IP ranges
+            if (/^10\.\d+\.\d+\.\d+$/.test(hostname)) return true;
+            if (/^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(hostname)) return true;
+            
+            return false;
+        }
+
+        // Check if the browser supports the required APIs
+        function checkBrowserSupport() {
+            // Log browser information for debugging
+            const browserInfo = {
+                userAgent: navigator.userAgent,
+                mediaDevices: !!navigator.mediaDevices,
+                getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                permissions: !!navigator.permissions,
+                isSecureContext: isSecureContext(),
+                hostname: window.location.hostname,
+                protocol: window.location.protocol
+            };
+            console.log('Browser Info:', browserInfo);
+
+            // Check for secure context
+            if (!isSecureContext()) {
+                updateStatus('Camera access requires a secure connection. Please use HTTPS or connect via localhost/local network.');
+                return false;
+            }
+
+            // Try to access the camera directly
+            try {
+                if (!navigator.mediaDevices) {
+                    throw new Error('mediaDevices not available');
+                }
+                return true;
+            } catch (err) {
+                console.error('Browser support check failed:', err);
+                updateStatus(`
+                    <p>Camera access is not available. Please check:</p>
+                    <ol class="text-start">
+                        <li>You are using a modern browser (Chrome, Firefox, or Safari)</li>
+                        <li>Camera permissions are enabled in your browser settings</li>
+                        <li>No other app is currently using the camera</li>
+                    </ol>
+                    <p>Click the "Check Permissions" button to verify your camera settings.</p>
+                `);
+                return false;
+            }
+        }
+
+        // Check camera permissions
+        async function checkCameraPermissions() {
+            try {
+                if (!navigator.permissions || !navigator.permissions.query) {
+                    updateStatus('Permission API not available in your browser. Please try using Chrome.');
+                    return;
+                }
+
+                const result = await navigator.permissions.query({ name: 'camera' });
+                console.log('Camera permission state:', result.state);
+
+                if (result.state === 'granted') {
+                    updateStatus('Camera access is allowed. You can now click "Start Camera".');
+                } else if (result.state === 'prompt') {
+                    updateStatus('Camera access will be requested when you click "Start Camera".');
+                } else if (result.state === 'denied') {
+                    updateStatus(`
+                        <p>Camera access is blocked. To enable it:</p>
+                        <ol class="text-start">
+                            <li>Open Chrome Settings</li>
+                            <li>Go to Site Settings or Privacy and security</li>
+                            <li>Find Camera permissions</li>
+                            <li>Allow access for this site</li>
+                        </ol>
+                    `);
+                }
+            } catch (err) {
+                console.error('Error checking permissions:', err);
+                updateStatus('Error checking camera permissions. Please try using Chrome.');
+            }
+        }
+
+        // Initialize camera permissions
+        async function initializeCamera() {
+            if (!checkBrowserSupport()) return false;
+
+            try {
+                // Request camera permissions explicitly
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                // Stop the test stream
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            } catch (err) {
+                console.error('Error initializing camera:', err);
+                let errorMessage = 'Error accessing camera: ';
+                
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = `
+                        <p>Camera access was denied. To enable it:</p>
+                        <ol class="text-start">
+                            <li>Open Chrome Settings</li>
+                            <li>Go to Site Settings or Privacy and security</li>
+                            <li>Find Camera permissions</li>
+                            <li>Allow access for this site</li>
+                        </ol>
+                    `;
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera found. Please make sure your device has a camera and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage = 'Camera is already in use by another application. Please close other apps that might be using the camera.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage = 'Camera does not support the requested resolution. Please try again.';
+                } else {
+                    errorMessage = err.message;
+                }
+                
+                updateStatus(errorMessage);
+                return false;
+            }
+        }
+
+        startButton.addEventListener('click', async function() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode = null;
+                    startButton.textContent = 'Scan';
+                    updateStatus('Camera stopped');
+                }).catch(err => {
+                    console.error('Error stopping camera:', err);
+                });
+                return;
+            }
+
+            updateStatus('Requesting camera access...');
+            
+            // First check and request camera permissions
+            const hasPermission = await initializeCamera();
+            if (!hasPermission) return;
+
+            updateStatus('Starting camera...');
+            
+            try {
+                html5QrCode = new Html5Qrcode("reader");
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+                };
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    updateStatus('Camera started successfully');
+                    startButton.textContent = 'Stop Camera';
+                }).catch(err => {
+                    console.error('Error starting camera:', err);
+                    updateStatus('Error starting camera: ' + err);
+                });
+            } catch (err) {
+                console.error('Error starting QR scanner:', err);
+                updateStatus('Error starting QR scanner: ' + err);
+            }
+        });
+
+        checkPermissionsButton.addEventListener('click', checkCameraPermissions);
+
+        function onScanSuccess(decodedText, decodedResult) {
+            updateStatus('QR Code detected!');
+            
+            // Stop scanning temporarily
+            html5QrCode.stop().then(() => {
+                html5QrCode = null;
+                startButton.textContent = 'Scan';
+                
+                // Process the QR code
+                result.style.display = 'block';
+                result.innerHTML = 'Processing attendance...';
+                
+                fetch('/mark_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        qr_data: decodedText
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        result.className = 'alert alert-success';
+                        result.innerHTML = `Attendance marked for ${data.student_name}`;
+                    } else {
+                        result.className = 'alert alert-danger';
+                        result.innerHTML = data.message || 'Error marking attendance';
+                    }
+                })
+                .catch(error => {
+                    result.className = 'alert alert-danger';
+                    result.innerHTML = 'Error processing attendance';
+                    console.error('Error:', error);
+                });
+            }).catch(err => {
+                console.error('Error stopping camera:', err);
+            });
+        }
+
+        function onScanFailure(error) {
+            // Handle scan failure, usually ignore
+            console.warn(`QR code scanning failed: ${error}`);
+        }
+
+        // Check browser support on page load
+        checkBrowserSupport();
+        
+        // Auto-start camera when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait a moment for the page to fully load
+            setTimeout(async () => {
+                if (checkBrowserSupport()) {
+                    updateStatus('Starting camera automatically...');
+                    
+                    // First check and request camera permissions
+                    const hasPermission = await initializeCamera();
+                    if (!hasPermission) return;
+
+                    updateStatus('Starting camera...');
+                    
+                    try {
+                        html5QrCode = new Html5Qrcode("reader");
+                        const config = {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 },
+                            aspectRatio: 1.0,
+                            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+                        };
+
+                        html5QrCode.start(
+                            { facingMode: "environment" },
+                            config,
+                            onScanSuccess,
+                            onScanFailure
+                        ).then(() => {
+                            updateStatus('Camera started successfully');
+                            startButton.textContent = 'Stop Camera';
+                        }).catch(err => {
+                            console.error('Error starting camera:', err);
+                            updateStatus('Error starting camera: ' + err);
+                        });
+                    } catch (err) {
+                        console.error('Error starting QR scanner:', err);
+                        updateStatus('Error starting QR scanner: ' + err);
+                    }
+                }
+            }, 500); // Wait 500ms before auto-starting
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Home - Attendance Tracker{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+/* Belt level color indicators */
+.belt-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+    border: 2px solid #dee2e6;
+}
+
+.belt-white { background-color: #ffffff; }
+.belt-yellow { background-color: #ffd700; }
+.belt-green { background-color: #28a745; }
+.belt-purple { background-color: #6f42c1; }
+.belt-blue { background-color: #007bff; }
+.belt-brown { background-color: #8b4513; }
+.belt-red { background-color: #dc3545; }
+.belt-black { background-color: #000000; }
+
+/* Two-color belts */
+.belt-purple-blue {
+    background: linear-gradient(45deg, #6f42c1 50%, #007bff 50%);
+}
+.belt-blue-brown {
+    background: linear-gradient(45deg, #007bff 50%, #8b4513 50%);
+}
+.belt-brown-red {
+    background: linear-gradient(45deg, #8b4513 50%, #dc3545 50%);
+}
+.belt-red-black {
+    background: linear-gradient(45deg, #dc3545 50%, #000000 50%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Student List</h3>
+                    <div>
+                        <a href="{{ url_for('main.scan_qr') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-qrcode"></i> Scan QR Codes
+                        </a>
+                        <a href="{{ url_for('main.add_student') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus"></i> Add Student
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="beltFilter" class="form-label">Filter by Belt Color</label>
+                                <select class="form-select" id="beltFilter">
+                                    <option value="">All Belt Colors</option>
+                                    <option value="White">White</option>
+                                    <option value="Yellow">Yellow</option>
+                                    <option value="Green">Green</option>
+                                    <option value="Purple">Purple</option>
+                                    <option value="Purple-Blue">Purple-Blue</option>
+                                    <option value="Blue">Blue</option>
+                                    <option value="Blue-Brown">Blue-Brown</option>
+                                    <option value="Brown">Brown</option>
+                                    <option value="Brown-Red">Brown-Red</option>
+                                    <option value="Red">Red</option>
+                                    <option value="Red-Black">Red-Black</option>
+                                    <option value="Black">Black</option>
+                                    <option value="Not Set">Not Set</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="lastAttendedFilter" class="form-label">Filter by Last Attended</label>
+                                <select class="form-select" id="lastAttendedFilter">
+                                    <option value="">All Students</option>
+                                    <option value="1">Less than 1 day ago</option>
+                                    <option value="3">Less than 3 days ago</option>
+                                    <option value="7">Less than 7 days ago</option>
+                                    <option value="14">Less than 14 days ago</option>
+                                    <option value="30">Less than 30 days ago</option>
+                                    <option value="never">Never attended</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button class="btn btn-outline-secondary" type="button" id="clearFilters">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Box -->
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="studentSearch" placeholder="Search students by name..." autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th class="d-none">Username</th>
+                                        <th>Name</th>
+                                        <th>Belt Color</th>
+                                        <th class="d-none">Email</th>
+                                        <th>Last Attended</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody">
+                                    {% for student in students %}
+                                    <tr class="student-row" 
+                                        data-first-name="{{ student.first_name.lower() }}" 
+                                        data-last-name="{{ student.last_name.lower() }}"
+                                        data-belt-level="{{ student.belt_level }}"
+                                        data-last-attended="{{ student.last_attended.isoformat() if student.last_attended else 'never' }}"
+                                        style="cursor: pointer;" 
+                                        onclick="window.location.href='{{ url_for('main.student_calendar', student_id=student.id) }}'">
+                                        <td class="d-none">{{ student.username }}</td>
+                                        <td class="fw-bold">{{ student.first_name }} {{ student.last_name }}</td>
+                                        <td>
+                                            {% if student.belt_level and student.belt_level != 'Not Set' %}
+                                                <div class="belt-indicator belt-{{ student.belt_level.lower().replace('-', '-').replace(' ', '-') }}"></div>
+                                            {% else %}
+                                                <span class="text-muted">Not Set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="d-none">{{ student.email }}</td>
+                                        <td>
+                                            {% if student.last_attended %}
+                                                <span class="last-attended-display" data-last-attended="{{ student.last_attended.isoformat() }}">
+                                                    Calculating...
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Never</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary mark-attendance-btn" 
+                                                        data-student-id="{{ student.id }}" 
+                                                        data-student-name="{{ student.first_name }} {{ student.last_name }}"
+                                                        onclick="event.stopPropagation()">
+                                                    <i class="fas fa-calendar-check"></i> Mark
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- No results message -->
+                        <div id="noResultsMessage" class="text-center text-muted" style="display: none;">
+                            <p>No students found matching your search.</p>
+                        </div>
+                    {% else %}
+                        <p class="text-center">No students found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Attendance Modal -->
+<div class="modal fade" id="markAttendanceModal" tabindex="-1" aria-labelledby="markAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAttendanceModalLabel">Mark Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.mark_attendance') }}" method="POST">
+                <div class="modal-body">
+                    <!-- Warning for existing attendance -->
+                    <div id="existingAttendanceWarning" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> This student already has attendance marked for the selected date. 
+                        Submitting will create an additional attendance record.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="student_name" class="form-label">Student</label>
+                        <input type="text" class="form-control" id="student_name" readonly>
+                        <input type="hidden" id="student_id" name="student_id">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required value="{{ today }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-outline-primary">Mark Attendance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openMarkAttendanceModal(studentId, studentName) {
+    document.getElementById('student_id').value = studentId;
+    document.getElementById('student_name').value = studentName;
+    
+    // Check for existing attendance for today
+    checkExistingAttendance(studentId);
+    
+    new bootstrap.Modal(document.getElementById('markAttendanceModal')).show();
+}
+
+// Function to check if student already has attendance for the selected date
+function checkExistingAttendance(studentId) {
+    const selectedDate = document.getElementById('date').value;
+    const warningDiv = document.getElementById('existingAttendanceWarning');
+    
+    if (!studentId || !selectedDate) {
+        warningDiv.style.display = 'none';
+        return;
+    }
+    
+    // Make AJAX request to check for existing attendance
+    fetch(`/check_existing_attendance?student_id=${studentId}&date=${selectedDate}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                warningDiv.style.display = 'block';
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Note:</strong> This student already has attendance marked for ${selectedDate}. 
+                    Submitting will create an additional attendance record.
+                `;
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking existing attendance:', error);
+            warningDiv.style.display = 'none';
+        });
+}
+
+// Search and filter functionality
+function filterStudents() {
+    const searchTerm = document.getElementById('studentSearch').value.toLowerCase().trim();
+    const beltFilter = document.getElementById('beltFilter').value;
+    const lastAttendedFilter = document.getElementById('lastAttendedFilter').value;
+    const studentRows = document.querySelectorAll('.student-row');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    let visibleCount = 0;
+    
+    studentRows.forEach(row => {
+        const firstName = row.getAttribute('data-first-name');
+        const lastName = row.getAttribute('data-last-name');
+        const fullName = `${firstName} ${lastName}`;
+        const beltLevel = row.getAttribute('data-belt-level');
+        const lastAttended = row.getAttribute('data-last-attended');
+        
+        // Check search term
+        const matchesSearch = searchTerm === '' || firstName.includes(searchTerm) || lastName.includes(searchTerm) || fullName.includes(searchTerm);
+        
+        // Check belt filter
+        const matchesBelt = beltFilter === '' || beltLevel === beltFilter;
+        
+        // Check last attended filter
+        let matchesLastAttended = true;
+        if (lastAttendedFilter !== '') {
+            if (lastAttendedFilter === 'never') {
+                matchesLastAttended = lastAttended === 'never';
+            } else {
+                const daysAgo = parseInt(lastAttendedFilter);
+                if (lastAttended === 'never') {
+                    matchesLastAttended = false;
+                } else {
+                    const lastAttendedDate = new Date(lastAttended);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - lastAttendedDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    matchesLastAttended = diffDays <= daysAgo;
+                }
+            }
+        }
+        
+        // Show row if all filters match
+        if (matchesSearch && matchesBelt && matchesLastAttended) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show/hide no results message
+    if ((searchTerm !== '' || beltFilter !== '' || lastAttendedFilter !== '') && visibleCount === 0) {
+        noResultsMessage.style.display = 'block';
+    } else {
+        noResultsMessage.style.display = 'none';
+    }
+}
+
+function clearSearch() {
+    document.getElementById('studentSearch').value = '';
+    filterStudents();
+}
+
+function clearFilters() {
+    document.getElementById('beltFilter').value = '';
+    document.getElementById('lastAttendedFilter').value = '';
+    document.getElementById('studentSearch').value = '';
+    filterStudents();
+}
+
+// Function to calculate and display "days ago" for last attended
+function updateLastAttendedDisplays() {
+    const displays = document.querySelectorAll('.last-attended-display');
+    const now = new Date();
+    
+    displays.forEach(display => {
+        const lastAttendedStr = display.getAttribute('data-last-attended');
+        if (lastAttendedStr) {
+            const lastAttended = new Date(lastAttendedStr);
+            
+            // Compare dates only (ignore time) to avoid timezone issues
+            const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastAttendedDate = new Date(lastAttended.getFullYear(), lastAttended.getMonth(), lastAttended.getDate());
+            
+            const diffTime = nowDate - lastAttendedDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let text;
+            if (diffDays === 0) {
+                text = 'Today';
+            } else if (diffDays === 1) {
+                text = '1 day ago';
+            } else {
+                text = `${diffDays} days ago`;
+            }
+            
+            display.textContent = text;
+            display.className = 'last-attended-display';
+        }
+    });
+}
+
+// Add click event listeners to mark attendance buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Update last attended displays
+    updateLastAttendedDisplays();
+    
+    const markButtons = document.querySelectorAll('.mark-attendance-btn');
+    markButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const studentId = this.getAttribute('data-student-id');
+            const studentName = this.getAttribute('data-student-name');
+            openMarkAttendanceModal(studentId, studentName);
+        });
+    });
+    
+    // Add search functionality
+    const searchInput = document.getElementById('studentSearch');
+    const clearButton = document.getElementById('clearSearch');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', filterStudents);
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                clearSearch();
+            }
+        });
+    }
+    
+    if (clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+    }
+    
+    // Add filter functionality
+    const beltFilter = document.getElementById('beltFilter');
+    const lastAttendedFilter = document.getElementById('lastAttendedFilter');
+    const clearFiltersButton = document.getElementById('clearFilters');
+    
+    if (beltFilter) {
+        beltFilter.addEventListener('change', filterStudents);
+    }
+    
+    if (lastAttendedFilter) {
+        lastAttendedFilter.addEventListener('change', filterStudents);
+    }
+    
+    if (clearFiltersButton) {
+        clearFiltersButton.addEventListener('click', clearFilters);
+    }
+    
+    // Add event listener for date changes in Mark Attendance modal
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            const studentId = document.getElementById('student_id').value;
+            if (studentId) {
+                checkExistingAttendance(studentId);
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

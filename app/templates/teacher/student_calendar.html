@@ -1,0 +1,1082 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.first_name }} {{ student.last_name }}'s Profile - Attendance Tracker{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<style>
+.profile-picture-container {
+    cursor: pointer;
+    position: relative;
+    width: 150px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.profile-picture-container:hover::after {
+    content: 'Click to change picture';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Belt level color indicators */
+.belt-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+    border: 2px solid #dee2e6;
+}
+
+/* Smaller belt indicators for belt history table */
+#beltHistoryTable .belt-indicator {
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.belt-white { background-color: #ffffff; }
+.belt-yellow { background-color: #ffd700; }
+.belt-green { background-color: #28a745; }
+.belt-purple { background-color: #6f42c1; }
+.belt-blue { background-color: #007bff; }
+.belt-brown { background-color: #8b4513; }
+.belt-red { background-color: #dc3545; }
+.belt-black { background-color: #000000; }
+
+/* Two-color belts */
+.belt-purple-blue {
+    background: linear-gradient(45deg, #6f42c1 50%, #007bff 50%);
+}
+.belt-blue-brown {
+    background: linear-gradient(45deg, #007bff 50%, #8b4513 50%);
+}
+.belt-brown-red {
+    background: linear-gradient(45deg, #8b4513 50%, #dc3545 50%);
+}
+.belt-red-black {
+    background: linear-gradient(45deg, #dc3545 50%, #000000 50%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">{{ student.first_name }} {{ student.last_name }}'s Profile</h3>
+                    <div>
+                        <a href="{{ url_for('main.print_student_qr', student_id=student.id) }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-qrcode"></i> Print QR
+                        </a>
+                        <button type="button" class="btn btn-outline-primary me-2" onclick="openMarkAttendanceModal({{ student.id }}, '{{ student.first_name }} {{ student.last_name }}')">
+                            <i class="fas fa-calendar-check"></i> Mark
+                        </button>
+                        <a href="{{ url_for('main.teacher_home') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Student Profile Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="profile-picture-container" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    {% if student.profile_picture %}
+                                        <img src="{{ url_for('static', filename='profile_pictures/' + student.profile_picture) }}" 
+                                             alt="Profile Picture" 
+                                             class="img-thumbnail"
+                                             style="width: 150px; height: 200px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                                             style="width: 150px; height: 200px;">
+                                            <i class="fas fa-user fa-3x text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5>Personal Information</h5>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="togglePersonalInfoEdit()" id="editPersonalInfoBtn">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="personalInfoDisplay">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <th style="width: 150px;">First Name:</th>
+                                                <td>{{ student.first_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Last Name:</th>
+                                                <td>{{ student.last_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email:</th>
+                                                <td>{{ student.email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Username:</th>
+                                                <td>{{ student.username }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Date of Birth:</th>
+                                                <td>{{ student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Gender:</th>
+                                                <td>{{ student.gender if student.gender else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Phone Number:</th>
+                                                <td>{{ student.phone_number if student.phone_number else 'Not Set' }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div id="personalInfoEdit" style="display: none;">
+                                        <form id="personalInfoForm">
+                                            <div class="mb-3">
+                                                <label for="edit_first_name" class="form-label">First Name</label>
+                                                <input type="text" class="form-control" id="edit_first_name" name="first_name" value="{{ student.first_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_last_name" class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="edit_last_name" name="last_name" value="{{ student.last_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_email" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="edit_email" name="email" value="{{ student.email }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_date_of_birth" class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="edit_date_of_birth" name="date_of_birth" value="{{ student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else '' }}">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_gender" class="form-label">Gender</label>
+                                                <select class="form-select" id="edit_gender" name="gender">
+                                                    <option value="">Not Set</option>
+                                                    <option value="Male" {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
+                                                    <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+                                                    <option value="Other" {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_phone_number" class="form-label">Phone Number</label>
+                                                <input type="tel" class="form-control" id="edit_phone_number" name="phone_number" value="{{ student.phone_number if student.phone_number else '' }}" placeholder="(555) 123-4567">
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-success" onclick="savePersonalInfo()">Save Changes</button>
+                                                <button type="button" class="btn btn-secondary" onclick="togglePersonalInfoEdit()">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="personalInfoDisplay2">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <th style="width: 150px;">Program:</th>
+                                                <td>{{ student.program if student.program else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Plan:</th>
+                                                <td>{{ student.plan if student.plan else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Effective:</th>
+                                                <td>
+                                                    {% if student.effective_from or student.effective_to %}
+                                                        {{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else 'Not Set' }} to 
+                                                        {{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else 'Not Set' }}
+                                                    {% else %}
+                                                        Not Set
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Classes:</th>
+                                                <td>{{ student.classes if student.classes else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Belt Level:</th>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if student.belt_level and student.belt_level != 'Not Set' and student.belt_level != 'No Belt' %}
+                                                            <div class="belt-indicator belt-{{ student.belt_level.lower().replace('-', '-') }}" style="cursor: pointer; margin-right: 8px;" onclick="toggleBeltLevelEdit()"></div>
+                                                        {% endif %}
+                                                        <span id="beltLevelDisplay" style="cursor: pointer;" onclick="toggleBeltLevelEdit()">{{ student.belt_level }}</span>
+                                                    </div>
+                                                    <div id="beltLevelEdit" style="display: none;" class="mt-2">
+                                                        <select class="form-select form-select-sm" id="beltLevelSelect">
+                                                            <option value="Not Set" {% if student.belt_level == 'Not Set' %}selected{% endif %}>Not Set</option>
+                                                            <option value="No Belt" {% if student.belt_level == 'No Belt' %}selected{% endif %}>No Belt</option>
+                                                            <option value="White" {% if student.belt_level == 'White' %}selected{% endif %}>White</option>
+                                                            <option value="Yellow" {% if student.belt_level == 'Yellow' %}selected{% endif %}>Yellow</option>
+                                                            <option value="Green" {% if student.belt_level == 'Green' %}selected{% endif %}>Green</option>
+                                                            <option value="Purple" {% if student.belt_level == 'Purple' %}selected{% endif %}>Purple</option>
+                                                            <option value="Purple-Blue" {% if student.belt_level == 'Purple-Blue' %}selected{% endif %}>Purple-Blue</option>
+                                                            <option value="Blue" {% if student.belt_level == 'Blue' %}selected{% endif %}>Blue</option>
+                                                            <option value="Blue-Brown" {% if student.belt_level == 'Blue-Brown' %}selected{% endif %}>Blue-Brown</option>
+                                                            <option value="Brown" {% if student.belt_level == 'Brown' %}selected{% endif %}>Brown</option>
+                                                            <option value="Brown-Red" {% if student.belt_level == 'Brown-Red' %}selected{% endif %}>Brown-Red</option>
+                                                            <option value="Red" {% if student.belt_level == 'Red' %}selected{% endif %}>Red</option>
+                                                            <option value="Red-Black" {% if student.belt_level == 'Red-Black' %}selected{% endif %}>Red-Black</option>
+                                                            <option value="Black" {% if student.belt_level == 'Black' %}selected{% endif %}>Black</option>
+                                                        </select>
+                                                        <div class="mt-2">
+                                                            <button class="btn btn-sm btn-success" onclick="updateBeltLevel()">Save</button>
+                                                            <button class="btn btn-sm btn-secondary" onclick="toggleBeltLevelEdit()">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div id="personalInfoEdit2" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="edit_program" class="form-label">Program</label>
+                                            <select class="form-select" id="edit_program" name="program">
+                                                <option value="">Not Set</option>
+                                                <option value="3 months" {% if student.program == '3 months' %}selected{% endif %}>3 months</option>
+                                                <option value="6 months" {% if student.program == '6 months' %}selected{% endif %}>6 months</option>
+                                                <option value="1 year" {% if student.program == '1 year' %}selected{% endif %}>1 year</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_plan" class="form-label">Plan</label>
+                                            <select class="form-select" id="edit_plan" name="plan">
+                                                <option value="">Not Set</option>
+                                                <option value="1/week" {% if student.plan == '1/week' %}selected{% endif %}>1/week</option>
+                                                <option value="2/week" {% if student.plan == '2/week' %}selected{% endif %}>2/week</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_effective_from" class="form-label">Effective From</label>
+                                            <input type="date" class="form-control" id="edit_effective_from" name="effective_from" value="{{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_effective_to" class="form-label">Effective To</label>
+                                            <input type="date" class="form-control" id="edit_effective_to" name="effective_to" value="{{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_classes" class="form-label">Classes</label>
+                                            <select class="form-select" id="edit_classes" name="classes">
+                                                <option value="">Not Set</option>
+                                                <option value="48" {% if student.classes == '48' %}selected{% endif %}>48</option>
+                                                <option value="96" {% if student.classes == '96' %}selected{% endif %}>96</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Stats Section -->
+                    <div class="mt-4">
+                        <h4>Attendance Stats (Last 12 Months)</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center align-middle">
+                                <thead>
+                                    <tr>
+                                        {% for month in attendance_stats.keys() %}
+                                            <th>{{ month }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        {% for count in attendance_stats.values() %}
+                                            <td>{{ count }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Table -->
+                    <div class="mt-4">
+                        <h4>Attendance History</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Notes</th>
+                                        <th>Marked By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendance in student.student_attendances.order_by(Attendance.date.desc()).all() %}
+                                    <tr>
+                                        <td>{{ attendance.created_at.strftime('%Y-%m-%d %H:%M') }} PT</td>
+                                        <td>{{ attendance.notes or '' }}</td>
+                                        <td>{{ attendance.teacher.first_name }} {{ attendance.teacher.last_name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Section -->
+                    <div class="mt-4">
+                        <h4>Attendance Calendar</h4>
+                        <div style="margin-top: 20px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <button id="prevMonthBtn" class="btn btn-outline-primary">&lt; Previous</button>
+                                <h4 id="currentMonth">Loading...</h4>
+                                <button id="nextMonthBtn" class="btn btn-outline-primary">Next &gt;</button>
+                            </div>
+                            <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+                                <!-- Calendar will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Belt History Section -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h4>Belt History</h4>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleBeltHistoryAdd()" id="addBeltHistoryBtn">
+                                <i class="fas fa-plus"></i> Add Entry
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="beltHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date Obtained</th>
+                                        <th>Belt Level</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="beltHistoryBody">
+                                    <!-- Belt history entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Add Belt History Form -->
+                        <div id="addBeltHistoryForm" style="display: none;" class="mt-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Add Belt History Entry</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="new_belt_level" class="form-label">Belt Level</label>
+                                                <select class="form-select" id="new_belt_level" required>
+                                                    <option value="">Select Belt Level</option>
+                                                    <option value="White">White</option>
+                                                    <option value="Yellow">Yellow</option>
+                                                    <option value="Green">Green</option>
+                                                    <option value="Purple">Purple</option>
+                                                    <option value="Purple-Blue">Purple-Blue</option>
+                                                    <option value="Blue">Blue</option>
+                                                    <option value="Blue-Brown">Blue-Brown</option>
+                                                    <option value="Brown">Brown</option>
+                                                    <option value="Brown-Red">Brown-Red</option>
+                                                    <option value="Red">Red</option>
+                                                    <option value="Red-Black">Red-Black</option>
+                                                    <option value="Black">Black</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="new_date_obtained" class="form-label">Date Obtained</label>
+                                                <input type="date" class="form-control" id="new_date_obtained" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-success" onclick="addBeltHistory()">Add Entry</button>
+                                        <button type="button" class="btn btn-secondary" onclick="toggleBeltHistoryAdd()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Upload Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="img-container">
+                            <img id="image" src="" alt="Upload preview" style="max-width: 100%;">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="preview-container">
+                            <div class="preview" style="width: 150px; height: 200px; overflow: hidden; margin: 0 auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <input type="file" class="form-control" id="profilePicture" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-primary" id="cropButton">Crop & Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Attendance Modal -->
+<div class="modal fade" id="markAttendanceModal" tabindex="-1" aria-labelledby="markAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAttendanceModalLabel">Mark Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.mark_attendance') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="student_name" class="form-label">Student</label>
+                        <input type="text" class="form-control" id="student_name" readonly>
+                        <input type="hidden" id="student_id" name="student_id">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required value="{{ today }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Save Attendance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+// Calendar state
+let currentDate = new Date();
+
+// Store attendance events
+const attendanceEvents = {{ attendance_events|tojson|safe }};
+
+// Cropper instance
+let cropper = null;
+
+// Initialize cropper when image is loaded
+document.getElementById('profilePicture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const image = document.getElementById('image');
+            image.src = e.target.result;
+            
+            if (cropper) {
+                cropper.destroy();
+            }
+            
+            cropper = new Cropper(image, {
+                aspectRatio: 150 / 200,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Handle crop and upload
+document.getElementById('cropButton').addEventListener('click', function() {
+    if (!cropper) {
+        return;
+    }
+    
+    const canvas = cropper.getCroppedCanvas({
+        width: 150,
+        height: 200
+    });
+    
+    canvas.toBlob(function(blob) {
+        const formData = new FormData();
+        formData.append('profile_picture', blob, 'cropped.jpg');
+        
+        fetch(`/student/{{ student.id }}/upload_picture`, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Error uploading image');
+            }
+        });
+    }, 'image/jpeg');
+});
+
+// Belt Level functions
+function toggleBeltLevelEdit() {
+    const display = document.getElementById('beltLevelDisplay');
+    const edit = document.getElementById('beltLevelEdit');
+    if (display.style.display !== 'none') {
+        display.style.display = 'none';
+        edit.style.display = 'block';
+    } else {
+        display.style.display = 'inline';
+        edit.style.display = 'none';
+    }
+}
+
+function updateBeltLevel() {
+    const newLevel = document.getElementById('beltLevelSelect').value;
+    fetch(`/student/{{ student.id }}/update_belt_level`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ belt_level: newLevel })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('beltLevelDisplay').textContent = newLevel;
+            
+            // Update the belt color indicator
+            const beltLevelContainer = document.getElementById('beltLevelDisplay').parentElement;
+            let existingIndicator = beltLevelContainer.querySelector('.belt-indicator');
+            
+            // Remove existing indicator if it exists
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            // Add new indicator if belt level is valid
+            if (newLevel && newLevel !== 'Not Set' && newLevel !== 'No Belt') {
+                const newIndicator = document.createElement('div');
+                newIndicator.className = `belt-indicator belt-${newLevel.toLowerCase().replace('-', '-')}`;
+                newIndicator.style.cursor = 'pointer';
+                newIndicator.onclick = toggleBeltLevelEdit;
+                beltLevelContainer.appendChild(newIndicator);
+            }
+            
+            toggleBeltLevelEdit();
+        } else {
+            alert('Error updating belt level');
+        }
+    });
+}
+
+// Personal Information functions
+function togglePersonalInfoEdit() {
+    const display1 = document.getElementById('personalInfoDisplay');
+    const display2 = document.getElementById('personalInfoDisplay2');
+    const edit1 = document.getElementById('personalInfoEdit');
+    const edit2 = document.getElementById('personalInfoEdit2');
+    const editBtn = document.getElementById('editPersonalInfoBtn');
+    
+    if (display1.style.display !== 'none') {
+        // Switch to edit mode
+        display1.style.display = 'none';
+        display2.style.display = 'none';
+        edit1.style.display = 'block';
+        edit2.style.display = 'block';
+        editBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
+        editBtn.className = 'btn btn-sm btn-outline-secondary';
+    } else {
+        // Switch back to display mode
+        display1.style.display = 'block';
+        display2.style.display = 'block';
+        edit1.style.display = 'none';
+        edit2.style.display = 'none';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        editBtn.className = 'btn btn-sm btn-outline-primary';
+    }
+}
+
+function savePersonalInfo() {
+    const formData = {
+        first_name: document.getElementById('edit_first_name').value,
+        last_name: document.getElementById('edit_last_name').value,
+        email: document.getElementById('edit_email').value,
+        date_of_birth: document.getElementById('edit_date_of_birth').value || null,
+        gender: document.getElementById('edit_gender').value || null,
+        program: document.getElementById('edit_program').value || null,
+        plan: document.getElementById('edit_plan').value || null,
+        effective_from: document.getElementById('edit_effective_from').value || null,
+        effective_to: document.getElementById('edit_effective_to').value || null,
+        classes: document.getElementById('edit_classes').value || null,
+        phone_number: document.getElementById('edit_phone_number').value || null
+    };
+    
+    fetch(`/student/{{ student.id }}/update_personal_info`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the display with new values
+            updatePersonalInfoDisplay(formData);
+            togglePersonalInfoEdit();
+            alert('Personal information updated successfully!');
+        } else {
+            alert('Error updating personal information: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating personal information');
+    });
+}
+
+function updatePersonalInfoDisplay(data) {
+    // Update first column display
+    const firstColumnTable = document.querySelector('#personalInfoDisplay table');
+    firstColumnTable.querySelector('tr:nth-child(1) td').textContent = data.first_name;
+    firstColumnTable.querySelector('tr:nth-child(2) td').textContent = data.last_name;
+    firstColumnTable.querySelector('tr:nth-child(3) td').textContent = data.email;
+    firstColumnTable.querySelector('tr:nth-child(4) td').textContent = data.username;
+    firstColumnTable.querySelector('tr:nth-child(5) td').textContent = data.date_of_birth ? data.date_of_birth : 'Not Set';
+    firstColumnTable.querySelector('tr:nth-child(6) td').textContent = data.gender || 'Not Set';
+    firstColumnTable.querySelector('tr:nth-child(7) td').textContent = data.phone_number || 'Not Set';
+    
+    // Update second column display
+    const secondColumnTable = document.querySelector('#personalInfoDisplay2 table');
+    secondColumnTable.querySelector('tr:nth-child(1) td').textContent = data.program || 'Not Set';
+    secondColumnTable.querySelector('tr:nth-child(2) td').textContent = data.plan || 'Not Set';
+    
+    // Update Effective field
+    const effectiveCell = secondColumnTable.querySelector('tr:nth-child(3) td');
+    if (data.effective_from || data.effective_to) {
+        const fromDate = data.effective_from ? data.effective_from : 'Not Set';
+        const toDate = data.effective_to ? data.effective_to : 'Not Set';
+        effectiveCell.textContent = `${fromDate} to ${toDate}`;
+    } else {
+        effectiveCell.textContent = 'Not Set';
+    }
+    
+    secondColumnTable.querySelector('tr:nth-child(4) td').textContent = data.classes || 'Not Set';
+    // Belt level is handled separately by the belt level update function
+}
+
+// Phone number formatting for edit form
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('edit_phone_number');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Load belt history on page load
+    loadBeltHistory();
+});
+
+// Belt History functions
+function loadBeltHistory() {
+    fetch(`/student/{{ student.id }}/belt_history`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayBeltHistory(data.belt_history);
+            } else {
+                console.error('Error loading belt history:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading belt history:', error);
+        });
+}
+
+function displayBeltHistory(beltHistory) {
+    const tbody = document.getElementById('beltHistoryBody');
+    tbody.innerHTML = '';
+    
+    if (beltHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No belt history entries found</td></tr>';
+        return;
+    }
+    
+    beltHistory.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.date_obtained}</td>
+            <td>
+                <div class="belt-indicator belt-${entry.belt_level.toLowerCase().replace('-', '-')}"></div>
+                <span class="belt-level-text">${entry.belt_level}</span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editBeltHistory(${entry.id}, '${entry.belt_level}', '${entry.date_obtained}')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteBeltHistory(${entry.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function toggleBeltHistoryAdd() {
+    const form = document.getElementById('addBeltHistoryForm');
+    const btn = document.getElementById('addBeltHistoryBtn');
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-times"></i> Cancel';
+        btn.className = 'btn btn-sm btn-outline-secondary';
+        // Set today's date as default
+        document.getElementById('new_date_obtained').value = new Date().toISOString().split('T')[0];
+    } else {
+        form.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Entry';
+        btn.className = 'btn btn-sm btn-outline-primary';
+        // Clear form
+        document.getElementById('new_belt_level').value = '';
+        document.getElementById('new_date_obtained').value = '';
+    }
+}
+
+function addBeltHistory() {
+    const beltLevel = document.getElementById('new_belt_level').value;
+    const dateObtained = document.getElementById('new_date_obtained').value;
+    
+    if (!beltLevel || !dateObtained) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch(`/student/{{ student.id }}/add_belt_history`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            belt_level: beltLevel,
+            date_obtained: dateObtained
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            toggleBeltHistoryAdd();
+            loadBeltHistory();
+            alert('Belt history entry added successfully!');
+        } else {
+            alert('Error adding belt history entry: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding belt history entry');
+    });
+}
+
+function editBeltHistory(id, currentBeltLevel, currentDate) {
+    // Create a modal-like form for editing
+    const editForm = document.createElement('div');
+    editForm.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1050;
+    `;
+    
+    editForm.innerHTML = `
+        <div class="card" style="width: 500px; max-width: 90vw;">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Edit Belt History Entry</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="edit_belt_level_${id}" class="form-label">Belt Level</label>
+                            <select class="form-select" id="edit_belt_level_${id}" required>
+                                <option value="White" ${currentBeltLevel === 'White' ? 'selected' : ''}>White</option>
+                                <option value="Yellow" ${currentBeltLevel === 'Yellow' ? 'selected' : ''}>Yellow</option>
+                                <option value="Green" ${currentBeltLevel === 'Green' ? 'selected' : ''}>Green</option>
+                                <option value="Purple" ${currentBeltLevel === 'Purple' ? 'selected' : ''}>Purple</option>
+                                <option value="Purple-Blue" ${currentBeltLevel === 'Purple-Blue' ? 'selected' : ''}>Purple-Blue</option>
+                                <option value="Blue" ${currentBeltLevel === 'Blue' ? 'selected' : ''}>Blue</option>
+                                <option value="Blue-Brown" ${currentBeltLevel === 'Blue-Brown' ? 'selected' : ''}>Blue-Brown</option>
+                                <option value="Brown" ${currentBeltLevel === 'Brown' ? 'selected' : ''}>Brown</option>
+                                <option value="Brown-Red" ${currentBeltLevel === 'Brown-Red' ? 'selected' : ''}>Brown-Red</option>
+                                <option value="Red" ${currentBeltLevel === 'Red' ? 'selected' : ''}>Red</option>
+                                <option value="Red-Black" ${currentBeltLevel === 'Red-Black' ? 'selected' : ''}>Red-Black</option>
+                                <option value="Black" ${currentBeltLevel === 'Black' ? 'selected' : ''}>Black</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="edit_date_obtained_${id}" class="form-label">Date Obtained</label>
+                            <input type="date" class="form-control" id="edit_date_obtained_${id}" value="${currentDate}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success" onclick="saveBeltHistoryEdit(${id})">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeBeltHistoryEdit()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(editForm);
+    
+    // Store the form reference for later use
+    window.currentEditForm = editForm;
+}
+
+function saveBeltHistoryEdit(id) {
+    const newBeltLevel = document.getElementById(`edit_belt_level_${id}`).value;
+    const newDate = document.getElementById(`edit_date_obtained_${id}`).value;
+    
+    if (!newBeltLevel || !newDate) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    fetch(`/student/{{ student.id }}/belt_history/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            belt_level: newBeltLevel,
+            date_obtained: newDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeBeltHistoryEdit();
+            loadBeltHistory();
+            alert('Belt history entry updated successfully!');
+        } else {
+            alert('Error updating belt history entry: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating belt history entry');
+    });
+}
+
+function closeBeltHistoryEdit() {
+    if (window.currentEditForm) {
+        document.body.removeChild(window.currentEditForm);
+        window.currentEditForm = null;
+    }
+}
+
+function deleteBeltHistory(id) {
+    if (!confirm('Are you sure you want to delete this belt history entry?')) {
+        return;
+    }
+    
+    fetch(`/student/{{ student.id }}/belt_history/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadBeltHistory();
+            alert('Belt history entry deleted successfully!');
+        } else {
+            alert('Error deleting belt history entry: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting belt history entry');
+    });
+}
+
+// Calendar functions
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Update month display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+    
+    // Get calendar parameters
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDay = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+    
+    // Create calendar grid
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    // Add day headers
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    days.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.style.textAlign = 'center';
+        dayHeader.style.fontWeight = 'bold';
+        dayHeader.style.padding = '5px';
+        dayHeader.style.backgroundColor = '#f8f9fa';
+        dayHeader.textContent = day;
+        grid.appendChild(dayHeader);
+    });
+    
+    // Add empty cells for days before the first of the month
+    for (let i = 0; i < startingDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.style.border = '1px solid #dee2e6';
+        emptyDay.style.padding = '10px';
+        emptyDay.style.minHeight = '100px';
+        emptyDay.style.backgroundColor = '#f8f9fa';
+        grid.appendChild(emptyDay);
+    }
+    
+    // Add days of the month
+    const today = new Date();
+    for (let day = 1; day <= totalDays; day++) {
+        const dayElement = document.createElement('div');
+        dayElement.style.border = '1px solid #dee2e6';
+        dayElement.style.padding = '10px';
+        dayElement.style.minHeight = '100px';
+        dayElement.style.backgroundColor = 'white';
+        
+        // Check if this is today
+        const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+        if (isToday) {
+            dayElement.style.backgroundColor = '#e9ecef';
+        }
+        
+        // Check if there's an attendance record for this day
+        const currentDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const attendanceEvent = attendanceEvents.find(event => event.start === currentDateStr);
+        if (attendanceEvent) {
+            // Don't change background color, just add the status badge
+            const statusBadge = document.createElement('div');
+            statusBadge.style.marginTop = '5px';
+            statusBadge.style.fontSize = '0.8em';
+            statusBadge.style.padding = '2px 5px';
+            statusBadge.style.borderRadius = '3px';
+            statusBadge.style.backgroundColor = attendanceEvent.backgroundColor;
+            statusBadge.style.color = attendanceEvent.textColor;
+            statusBadge.textContent = attendanceEvent.title;
+            dayElement.appendChild(statusBadge);
+        }
+        
+        // Add day number
+        const dayNumber = document.createElement('div');
+        dayNumber.textContent = day;
+        dayElement.insertBefore(dayNumber, dayElement.firstChild);
+        
+        grid.appendChild(dayElement);
+    }
+}
+
+// Event listeners
+document.getElementById('prevMonthBtn').addEventListener('click', function() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+});
+
+document.getElementById('nextMonthBtn').addEventListener('click', function() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+});
+
+// Initial render
+renderCalendar();
+
+// Mark Attendance Modal and Functions
+function openMarkAttendanceModal(studentId, studentName) {
+    document.getElementById('student_id').value = studentId;
+    document.getElementById('student_name').value = studentName;
+    document.getElementById('markAttendanceModalLabel').textContent = 'Mark Attendance - ' + studentName;
+    
+    var modal = new bootstrap.Modal(document.getElementById('markAttendanceModal'));
+    modal.show();
+}
+</script>
+{% endblock %} 
