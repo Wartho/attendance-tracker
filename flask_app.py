@@ -6,6 +6,8 @@ import os
 from datetime import datetime
 import uuid
 from sqlalchemy import text
+import click
+from flask.cli import with_appcontext
 
 app = Flask(__name__)
 
@@ -376,15 +378,14 @@ def health():
     except Exception as e:
         return {'status': 'unhealthy', 'message': f'Database error: {str(e)}'}, 500
 
-# Initialize database tables
-def init_db():
-    with app.app_context():
-        try:
-            db.create_all()
-            print("Database tables created successfully!")
-        except Exception as e:
-            print(f"Error creating database tables: {e}")
+@click.command("init-db")
+@with_appcontext
+def init_db_command():
+    """Create all database tables."""
+    db.create_all()
+    print("Database tables created successfully!")
+
+app.cli.add_command(init_db_command)
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True) 
