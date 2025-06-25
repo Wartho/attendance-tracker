@@ -27,6 +27,10 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     
+    # Initialize models after db is set up
+    from app.models import init_models
+    User, BeltHistory, Attendance, Class, ClassEnrollment, ClassHoliday = init_models(db, login_manager)
+    
     # Import and register blueprints
     from app.routes import main, auth
     app.register_blueprint(main)

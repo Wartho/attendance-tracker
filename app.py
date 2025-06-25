@@ -12,13 +12,24 @@ from flask.cli import with_appcontext
 import click
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+# Configuration
+if os.environ.get('DATABASE_URL'):
+    # Production database (Heroku)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+        app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+else:
+    # Development database
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
 login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
