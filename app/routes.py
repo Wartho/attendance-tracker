@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, jsonify, current_app, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import init_models
+from app.models import User, Attendance, BeltHistory, Class
 from app.forms import RegistrationForm, AddStudentForm, ClassForm
 from datetime import datetime, time
 import pytz
@@ -16,9 +16,6 @@ from werkzeug.utils import secure_filename
 from collections import OrderedDict
 import calendar
 from datetime import date
-
-# Initialize models
-User, BeltHistory, Attendance, Class, ClassEnrollment, ClassHoliday = init_models(db, current_app.login_manager)
 
 main = Blueprint('main', __name__)
 auth = Blueprint('auth', __name__)
