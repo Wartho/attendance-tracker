@@ -114,14 +114,17 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Login failed. Please check your username and password.')
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Login failed. Please check your username and password.')
+        except Exception as e:
+            flash(f'Login error: {str(e)}')
     
     return render_template_string('''
     <!DOCTYPE html>
@@ -176,28 +179,31 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        email = request.form['email']
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-        role = request.form['role']
-        
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose a different one.')
-        else:
-            new_user = User(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                role=role
-            )
-            new_user.set_password(password)
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
-            return redirect(url_for('dashboard'))
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            email = request.form['email']
+            first_name = request.form['first_name']
+            last_name = request.form['last_name']
+            role = request.form['role']
+            
+            if User.query.filter_by(username=username).first():
+                flash('Username already exists. Please choose a different one.')
+            else:
+                new_user = User(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role=role
+                )
+                new_user.set_password(password)
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+                return redirect(url_for('dashboard'))
+        except Exception as e:
+            flash(f'Registration error: {str(e)}')
     
     return render_template_string('''
     <!DOCTYPE html>
@@ -271,85 +277,88 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    if current_user.is_teacher():
-        students = User.query.filter_by(role='student').all()
-        return render_template_string('''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Teacher Dashboard - Attendance Tracker</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-                .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h1 { color: #333; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-                .nav a { margin: 10px; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-                .nav a:hover { background: #0056b3; }
-                .student-list { margin-top: 20px; }
-                .student-item { padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 10px 0; background: #f9f9f9; }
-                .student-name { font-weight: bold; font-size: 18px; }
-                .student-info { color: #666; margin-top: 5px; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Teacher Dashboard</h1>
-                    <div class="nav">
-                        <a href="/logout">Logout</a>
-                        <a href="/">Home</a>
+    try:
+        if current_user.is_teacher():
+            students = User.query.filter_by(role='student').all()
+            return render_template_string('''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Teacher Dashboard - Attendance Tracker</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+                    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    h1 { color: #333; }
+                    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .nav a { margin: 10px; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+                    .nav a:hover { background: #0056b3; }
+                    .student-list { margin-top: 20px; }
+                    .student-item { padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 10px 0; background: #f9f9f9; }
+                    .student-name { font-weight: bold; font-size: 18px; }
+                    .student-info { color: #666; margin-top: 5px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Teacher Dashboard</h1>
+                        <div class="nav">
+                            <a href="/logout">Logout</a>
+                            <a href="/">Home</a>
+                        </div>
+                    </div>
+                    
+                    <h2>Welcome, {{ current_user.first_name }}!</h2>
+                    
+                    <div class="student-list">
+                        <h3>Students ({{ students|length }})</h3>
+                        {% for student in students %}
+                        <div class="student-item">
+                            <div class="student-name">{{ student.first_name }} {{ student.last_name }}</div>
+                            <div class="student-info">Username: {{ student.username }} | Email: {{ student.email }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                
-                <h2>Welcome, {{ current_user.first_name }}!</h2>
-                
-                <div class="student-list">
-                    <h3>Students ({{ students|length }})</h3>
-                    {% for student in students %}
-                    <div class="student-item">
-                        <div class="student-name">{{ student.first_name }} {{ student.last_name }}</div>
-                        <div class="student-info">Username: {{ student.username }} | Email: {{ student.email }}</div>
+            </body>
+            </html>
+            ''', students=students)
+        else:
+            return render_template_string('''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Student Dashboard - Attendance Tracker</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+                    .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    h1 { color: #333; }
+                    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                    .nav a { margin: 10px; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+                    .nav a:hover { background: #0056b3; }
+                    .welcome { padding: 20px; background: #e8f5e8; border-radius: 5px; margin: 20px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Student Dashboard</h1>
+                        <div class="nav">
+                            <a href="/logout">Logout</a>
+                            <a href="/">Home</a>
+                        </div>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </body>
-        </html>
-        ''', students=students)
-    else:
-        return render_template_string('''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Student Dashboard - Attendance Tracker</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-                .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h1 { color: #333; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-                .nav a { margin: 10px; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-                .nav a:hover { background: #0056b3; }
-                .welcome { padding: 20px; background: #e8f5e8; border-radius: 5px; margin: 20px 0; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Student Dashboard</h1>
-                    <div class="nav">
-                        <a href="/logout">Logout</a>
-                        <a href="/">Home</a>
+                    
+                    <div class="welcome">
+                        <h2>Welcome, {{ current_user.first_name }} {{ current_user.last_name }}!</h2>
+                        <p>You are logged in as a student.</p>
                     </div>
                 </div>
-                
-                <div class="welcome">
-                    <h2>Welcome, {{ current_user.first_name }} {{ current_user.last_name }}!</h2>
-                    <p>You are logged in as a student.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        ''')
+            </body>
+            </html>
+            ''')
+    except Exception as e:
+        return f'Dashboard error: {str(e)}', 500
 
 @app.route('/logout')
 @login_required
@@ -359,9 +368,22 @@ def logout():
 
 @app.route('/health')
 def health():
-    return {'status': 'healthy', 'message': 'Attendance Tracker is running!'}
+    try:
+        # Test database connection
+        db.session.execute('SELECT 1')
+        return {'status': 'healthy', 'message': 'Attendance Tracker is running!', 'database': 'connected'}
+    except Exception as e:
+        return {'status': 'unhealthy', 'message': f'Database error: {str(e)}'}, 500
+
+# Initialize database tables
+def init_db():
+    with app.app_context():
+        try:
+            db.create_all()
+            print("Database tables created successfully!")
+        except Exception as e:
+            print(f"Error creating database tables: {e}")
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    init_db()
     app.run(debug=True) 
