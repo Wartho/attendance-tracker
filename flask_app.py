@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import datetime
 import uuid
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -370,7 +371,7 @@ def logout():
 def health():
     try:
         # Test database connection
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         return {'status': 'healthy', 'message': 'Attendance Tracker is running!', 'database': 'connected'}
     except Exception as e:
         return {'status': 'unhealthy', 'message': f'Database error: {str(e)}'}, 500
