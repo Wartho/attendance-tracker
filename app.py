@@ -1,15 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template_string
 import os
-from datetime import datetime
-import qrcode
-from io import BytesIO
-import base64
-from flask.cli import with_appcontext
-import click
 
 app = Flask(__name__)
 
@@ -24,89 +14,38 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-class User(db.Model, UserMixin):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-@click.command('clear-users')
-@with_appcontext
-def clear_users():
-    """Clear all users from the database."""
-    User.query.delete()
-    db.session.commit()
-    click.echo('All users have been cleared from the database.')
-
-app.cli.add_command(clear_users)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Attendance Tracker</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            h1 { color: #333; }
+            .status { padding: 20px; background: #e8f5e8; border: 1px solid #4caf50; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🎉 Attendance Tracker</h1>
+            <div class="status">
+                <h2>✅ Successfully Deployed!</h2>
+                <p>Your attendance tracker app is now running on Heroku.</p>
+                <p><strong>URL:</strong> https://attendance-tracker-app-7f35b5ba0406.herokuapp.com/</p>
+                <p>Next steps: Add your attendance tracking functionality.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    ''')
 
-@app.route('/login', methods=['POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for('index'))
-        else:
-            flash('Login failed. Please check your username and password.')
-    return redirect(url_for('index'))
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose a different one.')
-        else:
-            new_user = User(username=username, password=generate_password_hash(password))
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
-            return redirect(url_for('index'))
-    return render_template('register.html')
-
-@app.route('/qrcode')
-@login_required
-def qrcode():
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(current_user.username)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill='black', back_color='white')
-    img_io = BytesIO()
-    img.save(img_io, 'PNG')
-    img_io.seek(0)
-    img_data = base64.b64encode(img_io.getvalue()).decode('utf-8')
-    return render_template('qrcode.html', img_data=img_data)
+@app.route('/health')
+def health():
+    return {'status': 'healthy', 'message': 'Attendance Tracker is running!'}
 
 if __name__ == '__main__':
     app.run(debug=True) 
