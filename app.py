@@ -10,17 +10,24 @@ from io import BytesIO
 import base64
 from flask.cli import with_appcontext
 import click
+from config import config
 
 # Get the directory where app.py is located
 basedir = os.path.abspath(os.path.dirname(__file__))
 # Set template folder to app/templates
 template_dir = os.path.join(basedir, 'app', 'templates')
-# Set database path to instance/app.db
-db_path = os.path.join(basedir, 'instance', 'app.db')
 
-app = Flask(__name__, template_folder=template_dir)
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+def create_app(config_name=None):
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    app = Flask(__name__, template_folder=template_dir)
+    app.config.from_object(config[config_name])
+    config[config_name].init_app(app)
+    
+    return app
+
+app = create_app()
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
