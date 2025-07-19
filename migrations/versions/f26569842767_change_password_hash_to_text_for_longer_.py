@@ -18,7 +18,9 @@ depends_on = None
 
 def upgrade():
     op.alter_column('user', 'password_hash', type_=sa.Text())
+    op.alter_column('user', 'classes', type_=sa.String(length=32))
 
 
 def downgrade():
     op.alter_column('user', 'password_hash', type_=sa.String(length=128))
+    op.alter_column('user', 'classes', type_=sa.String(length=10))

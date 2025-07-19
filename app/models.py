@@ -28,7 +28,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), nullable=False)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.Text)
     role = db.Column(db.String(20), nullable=False)  # 'teacher' or 'student'
     created_at = db.Column(db.DateTime, default=get_pacific_datetime)
     qr_code_id = db.Column(db.String(36), unique=True, name='uq_user_qr_code_id', default=lambda: str(uuid.uuid4()))
@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
     plan = db.Column(db.String(20), nullable=True)  # 1/week, 2/week
     effective_from = db.Column(db.Date, nullable=True)  # Effective period start date
     effective_to = db.Column(db.Date, nullable=True)  # Effective period end date
-    classes = db.Column(db.String(10), nullable=True)  # 48, 96
+    classes = db.Column(db.String(32), nullable=True)  # Increased from 10 to 32
     phone_number = db.Column(db.String(20), nullable=True)
     
     # Student's attendance records
