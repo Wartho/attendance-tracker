@@ -18,7 +18,9 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    result = conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name='attendance' and column_name='updated_at'")
+    result = conn.execute(sa.text(
+        "SELECT column_name FROM information_schema.columns WHERE table_name='attendance' and column_name='updated_at'"
+    ))
     if not result.fetchone():
         with op.batch_alter_table('attendance', schema=None) as batch_op:
             batch_op.add_column(sa.Column('updated_at', sa.TIMESTAMP()))
