@@ -52,10 +52,28 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="password2" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="password2" name="password2" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="role" class="form-label">Role</label>
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="student">Student</option>
                                     <option value="teacher">Teacher</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan" class="form-label">Plan</label>
+                                <select class="form-select" id="plan" name="plan">
+                                    <option value="">Not Set</option>
+                                    <option value="1/week">1/week</option>
+                                    <option value="2/week">2/week</option>
                                 </select>
                             </div>
                         </div>

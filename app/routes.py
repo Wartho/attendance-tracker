@@ -16,6 +16,7 @@ from werkzeug.utils import secure_filename
 from collections import OrderedDict
 import calendar
 from datetime import date
+import logging
 
 main = Blueprint('main', __name__)
 auth = Blueprint('auth', __name__)
@@ -317,10 +318,16 @@ def logout():
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger("register")
     if current_user.is_authenticated:
+        logger.debug("User already authenticated, redirecting.")
         return redirect(url_for('main.index'))
     form = RegistrationForm()
+    logger.debug(f"Form data: {form.data}")
     if form.validate_on_submit():
+        logger.debug("Form validated successfully.")
         user = User(
             username=form.username.data,
             email=form.email.data,
@@ -328,7 +335,7 @@ def register():
             last_name=form.last_name.data,
             role=form.role.data,
             date_of_birth=form.date_of_birth.data,
-            sex=form.sex.data if form.sex.data else None,
+            gender=form.gender.data if form.gender.data else None,
             program=form.program.data if form.program.data else None,
             plan=form.plan.data if form.plan.data else None,
             classes=form.classes.data if form.classes.data else None,
@@ -338,11 +345,16 @@ def register():
         db.session.add(user)
         try:
             db.session.commit()
+            logger.debug("User registered and committed to DB.")
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('auth.login'))
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error during registration: {e}")
             flash('Error during registration. Username or email might already exist.', 'danger')
+    else:
+        if request.method == 'POST':
+            logger.debug(f"Form validation failed. Errors: {form.errors}")
     return render_template('auth/register.html', form=form)
 
 @main.route('/teacher/add_student', methods=['GET', 'POST'])
@@ -360,7 +372,7 @@ def add_student():
             last_name=form.last_name.data,
             role='student',
             date_of_birth=form.date_of_birth.data,
-            sex=form.sex.data if form.sex.data else None,
+            gender=form.gender.data if form.gender.data else None,
             program=form.program.data if form.program.data else None,
             plan=form.plan.data if form.plan.data else None,
             classes=form.classes.data if form.classes.data else None,
