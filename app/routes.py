@@ -702,17 +702,18 @@ def manage_belt_history(student_id, history_id):
 @main.route('/student/<int:student_id>/add_belt_history', methods=['POST'])
 @login_required
 def add_belt_history(student_id):
+    import logging
+    logger = logging.getLogger("add_belt_history")
     if not current_user.is_teacher():
         return jsonify({'success': False, 'message': 'Only teachers can add belt history'}), 403
-    
     student = User.query.filter_by(id=student_id, role='student').first()
     if not student:
         return jsonify({'success': False, 'message': 'Student not found'}), 404
-    
     data = request.get_json()
+    logger.debug(f"Received data: {data}")
     if not data or 'belt_level' not in data or 'date_obtained' not in data:
+        logger.error("Missing belt_level or date_obtained in data")
         return jsonify({'success': False, 'message': 'Belt level and date obtained are required'}), 400
-    
     try:
         belt_entry = BeltHistory(
             student_id=student.id,
@@ -721,9 +722,11 @@ def add_belt_history(student_id):
         )
         db.session.add(belt_entry)
         db.session.commit()
+        logger.info("Belt history entry added successfully")
         return jsonify({'success': True, 'message': 'Belt history entry added'})
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error adding belt history entry: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Error adding belt history entry'}), 500
 
 @main.route('/student/<int:student_id>/update_personal_info', methods=['POST'])
