@@ -71,6 +71,18 @@
 .belt-red-black {
     background: linear-gradient(45deg, #dc3545 50%, #000000 50%);
 }
+
+@media (max-width: 400px) {
+  .calendar-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  #calendarGrid {
+    min-width: 350px;
+    width: 100%;
+  }
+}
 </style>
 {% endblock %}
 
@@ -364,7 +376,7 @@
                     <!-- Calendar Section -->
                     <div class="mt-4">
                         <h4>Attendance Calendar</h4>
-                        <div style="margin-top: 20px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px;">
+                        <div class="calendar-responsive" style="margin-top: 20px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <button id="prevMonthBtn" class="btn btn-outline-primary">&lt; Previous</button>
                                 <h4 id="currentMonth">Loading...</h4>
@@ -689,7 +701,6 @@ function savePersonalInfo() {
         phone_number: document.getElementById('edit_phone_number').value || null,
         belt_level: document.getElementById('edit_belt_level').value || null
     };
-    
     fetch(`/student/{{ student.id }}/update_personal_info`, {
         method: 'POST',
         headers: {
@@ -702,6 +713,21 @@ function savePersonalInfo() {
         if (data.success) {
             // Update the display with new values
             updatePersonalInfoDisplay(formData);
+            // Update belt color display and indicator
+            const newBeltLevel = formData.belt_level;
+            const beltLevelDisplay = document.getElementById('beltLevelDisplay');
+            beltLevelDisplay.textContent = newBeltLevel;
+            const beltLevelContainer = beltLevelDisplay.parentElement;
+            let existingIndicator = beltLevelContainer.querySelector('.belt-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            if (newBeltLevel && newBeltLevel !== 'Not Set' && newBeltLevel !== 'No Belt') {
+                const newIndicator = document.createElement('div');
+                newIndicator.className = `belt-indicator belt-${newBeltLevel.toLowerCase().replace('-', '-')}`;
+                newIndicator.style.cursor = 'pointer';
+                beltLevelContainer.insertBefore(newIndicator, beltLevelDisplay);
+            }
             togglePersonalInfoEdit();
             alert('Personal information updated successfully!');
         } else {
