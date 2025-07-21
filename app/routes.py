@@ -318,14 +318,14 @@ def logout():
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    from flask import Response
+    if not current_user.is_authenticated:
+        return Response("If you need to register a new user, please log in first", mimetype="text/plain")
     import logging
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("register")
-    if current_user.is_authenticated:
-        logger.debug("User already authenticated, redirecting.")
-        return redirect(url_for('main.index'))
+    logger.debug(f"Form data: {request.form}")
     form = RegistrationForm()
-    logger.debug(f"Form data: {form.data}")
     if form.validate_on_submit():
         logger.debug("Form validated successfully.")
         user = User(
@@ -780,6 +780,8 @@ def update_personal_info(student_id):
             student.classes = data['classes']
         if 'phone_number' in data:
             student.phone_number = data['phone_number']
+        if 'belt_level' in data:
+            student.belt_level = data['belt_level']
         
         db.session.commit()
         return jsonify({'success': True})
