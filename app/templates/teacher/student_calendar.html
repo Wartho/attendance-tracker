@@ -728,6 +728,7 @@ function savePersonalInfo() {
                 newIndicator.style.cursor = 'pointer';
                 beltLevelContainer.insertBefore(newIndicator, beltLevelDisplay);
             }
+            loadBeltHistory(); // Refresh Belt History table
             togglePersonalInfoEdit();
             alert('Personal information updated successfully!');
         } else {
