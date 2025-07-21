@@ -781,7 +781,17 @@ def update_personal_info(student_id):
         if 'phone_number' in data:
             student.phone_number = data['phone_number']
         if 'belt_level' in data:
-            student.belt_level = data['belt_level']
+            old_belt_level = student.belt_level
+            new_belt_level = data['belt_level']
+            if old_belt_level != new_belt_level and new_belt_level and new_belt_level != 'No Belt':
+                from app.models import BeltHistory
+                belt_history = BeltHistory(
+                    student_id=student.id,
+                    belt_level=new_belt_level,
+                    date_obtained=datetime.utcnow().date()
+                )
+                db.session.add(belt_history)
+            student.belt_level = new_belt_level
         
         db.session.commit()
         return jsonify({'success': True})
