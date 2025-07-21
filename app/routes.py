@@ -600,6 +600,8 @@ def upload_profile_picture(student_id):
 @main.route('/student/<int:student_id>/update_belt_level', methods=['POST'])
 @login_required
 def update_belt_level(student_id):
+    import logging
+    logger = logging.getLogger("belt_level_update")
     if not current_user.is_teacher():
         return jsonify({'success': False, 'message': 'Only teachers can update belt levels'}), 403
     
@@ -629,6 +631,7 @@ def update_belt_level(student_id):
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error updating belt level: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Error updating belt level'}), 500
 
 @main.route('/student/<int:student_id>/belt_history', methods=['GET'])
@@ -659,6 +662,8 @@ def get_belt_history(student_id):
 @main.route('/student/<int:student_id>/belt_history/<int:history_id>', methods=['PUT', 'DELETE'])
 @login_required
 def manage_belt_history(student_id, history_id):
+    import logging
+    logger = logging.getLogger("belt_history")
     if not current_user.is_teacher():
         return jsonify({'success': False, 'message': 'Only teachers can manage belt history'}), 403
     
@@ -691,6 +696,7 @@ def manage_belt_history(student_id, history_id):
             
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error managing belt history: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Error managing belt history'}), 500
 
 @main.route('/student/<int:student_id>/add_belt_history', methods=['POST'])
