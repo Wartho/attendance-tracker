@@ -581,7 +581,14 @@ document.getElementById('profilePicture').addEventListener('change', function(e)
 
 // Handle crop and upload
 document.getElementById('cropButton').addEventListener('click', function() {
+    const fileInput = document.getElementById('profilePicture');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a file first before cropping and uploading.');
+        return;
+    }
+    
     if (!cropper) {
+        alert('Please select a file first before cropping and uploading.');
         return;
     }
     
