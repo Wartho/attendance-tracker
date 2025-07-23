@@ -22,15 +22,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.student_qr_code') }}">QR Code</a>
-                            </li>
                         {% else %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.student_qr_code') }}">QR Code</a>
                             </li>
                         {% endif %}
                         <li class="nav-item">

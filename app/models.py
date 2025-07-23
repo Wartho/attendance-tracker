@@ -33,7 +33,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=get_pacific_datetime)
     qr_code_id = db.Column(db.String(36), unique=True, name='uq_user_qr_code_id', default=lambda: str(uuid.uuid4()))
     profile_picture = db.Column(db.String(255))  # Store the filename of the profile picture
-    belt_level = db.Column(db.String(20), default='Not Set')  # No Belt, Not Set, White, Yellow, Green, Purple, Purple-Blue, Blue, Blue-Brown, Brown, Brown-Red, Red, Red-Black, Black
+    belt_level = db.Column(db.String(20), default='No Belt')  # Default changed from 'Not Set' to 'No Belt'
     
     # New personal information fields
     date_of_birth = db.Column(db.Date, nullable=True)
