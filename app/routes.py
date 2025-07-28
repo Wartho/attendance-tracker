@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Attendance, BeltHistory, Class
 from app.forms import RegistrationForm, AddStudentForm, ClassForm
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import pytz
 from io import BytesIO
 import qrcode
@@ -912,6 +912,52 @@ def get_plan(student_id):
     plans.sort(key=lambda x: x['effective_date'] if x['effective_date'] else '', reverse=True)
     
     return jsonify({'success': True, 'plans': plans})
+
+@main.route('/student/<int:student_id>/plan/<int:plan_id>/remaining', methods=['GET'])
+def get_plan_remaining(student_id, plan_id):
+    """Calculate remaining classes for a specific plan"""
+    student = User.query.get_or_404(student_id)
+    
+    # Get the plan data (currently stored in User model)
+    if not student.program or not student.effective_from:
+        return jsonify({'success': False, 'remaining': 0, 'message': 'No plan data found'})
+    
+    # Calculate effective end date based on program
+    effective_to = None
+    if student.program == "3 months":
+        effective_to = student.effective_from + timedelta(days=90)
+    elif student.program == "6 months":
+        effective_to = student.effective_from + timedelta(days=180)
+    elif student.program == "1 year":
+        effective_to = student.effective_from + timedelta(days=365)
+    
+    if not effective_to:
+        return jsonify({'success': False, 'remaining': 0, 'message': 'Invalid program duration'})
+    
+    # Set time range (12:01am to 11:59pm)
+    start_datetime = datetime.combine(student.effective_from, time(0, 1))  # 12:01am
+    end_datetime = datetime.combine(effective_to, time(23, 59))  # 11:59pm
+    
+    # Count attended classes in the date range
+    from app.models import Attendance
+    attended_count = Attendance.query.filter(
+        Attendance.student_id == student_id,
+        Attendance.created_at >= start_datetime,
+        Attendance.created_at <= end_datetime
+    ).count()
+    
+    # Calculate remaining classes
+    total_classes = int(student.classes) if student.classes and student.classes.isdigit() else 0
+    remaining = max(0, total_classes - attended_count)
+    
+    return jsonify({
+        'success': True, 
+        'remaining': remaining,
+        'attended': attended_count,
+        'total': total_classes,
+        'effective_from': student.effective_from.strftime('%Y-%m-%d'),
+        'effective_to': effective_to.strftime('%Y-%m-%d')
+    })
 
 @main.route('/student/<int:student_id>/plan', methods=['POST'])
 @login_required

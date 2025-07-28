@@ -340,6 +340,7 @@
                                         <th>Program</th>
                                         <th>Plan</th>
                                         <th>Classes</th>
+                                        <th>Remaining</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1243,6 +1244,7 @@ function displayPlan(plans) {
             <td>${plan.program || 'Not Set'}</td>
             <td>${plan.plan || 'Not Set'}</td>
             <td>${plan.classes || 'Not Set'}</td>
+            <td id="remaining-${plan.id}">Loading...</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
                     <i class="fas fa-edit"></i> Edit
@@ -1253,6 +1255,9 @@ function displayPlan(plans) {
             </td>
         `;
         tbody.appendChild(row);
+        
+        // Fetch remaining classes for this plan
+        fetchRemainingClasses(plan.id);
     });
     
     // Add "See More/Less" functionality
@@ -1560,6 +1565,7 @@ function togglePlanView() {
                 <td>${plan.program || 'Not Set'}</td>
                 <td>${plan.plan || 'Not Set'}</td>
                 <td>${plan.classes || 'Not Set'}</td>
+                <td id="remaining-${plan.id}">Loading...</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
                         <i class="fas fa-edit"></i> Edit
@@ -1570,6 +1576,9 @@ function togglePlanView() {
                 </td>
             `;
             tbody.appendChild(row);
+            
+            // Fetch remaining classes for this plan
+            fetchRemainingClasses(plan.id);
         });
         
         // Add "See Less" button
@@ -1728,6 +1737,35 @@ function populatePlanForm() {
         })
         .catch(error => {
             console.error('Error loading plan data:', error);
+        });
+}
+
+function fetchRemainingClasses(planId) {
+    const studentId = {{ student.id }};
+    fetch(`/student/${studentId}/plan/${planId}/remaining`)
+        .then(response => response.json())
+        .then(data => {
+            const remainingCell = document.getElementById(`remaining-${planId}`);
+            if (data.success) {
+                remainingCell.textContent = data.remaining;
+                // Add color coding based on remaining classes
+                if (data.remaining <= 0) {
+                    remainingCell.style.color = '#dc3545'; // Red for no remaining classes
+                } else if (data.remaining <= 5) {
+                    remainingCell.style.color = '#ffc107'; // Yellow for low remaining classes
+                } else {
+                    remainingCell.style.color = '#28a745'; // Green for good remaining classes
+                }
+            } else {
+                remainingCell.textContent = 'N/A';
+                remainingCell.style.color = '#6c757d'; // Gray for N/A
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching remaining classes:', error);
+            const remainingCell = document.getElementById(`remaining-${planId}`);
+            remainingCell.textContent = 'Error';
+            remainingCell.style.color = '#dc3545';
         });
 }
 </script>
