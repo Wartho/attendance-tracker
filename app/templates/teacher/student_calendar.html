@@ -339,8 +339,8 @@
                                         <th>Effective</th>
                                         <th>Program</th>
                                         <th>Plan</th>
-                                        <th>Classes</th>
-                                        <th>Remaining</th>
+                                        <th class="text-center">Classes</th>
+                                        <th class="text-center">Remaining</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1243,8 +1243,8 @@ function displayPlan(plans) {
             <td>${effectivePeriod}</td>
             <td>${plan.program || 'Not Set'}</td>
             <td>${plan.plan || 'Not Set'}</td>
-            <td>${plan.classes || 'Not Set'}</td>
-            <td id="remaining-${plan.id}">Loading...</td>
+            <td class="text-center">${plan.classes || 'Not Set'}</td>
+            <td class="text-center" id="remaining-${plan.id}">Loading...</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
                     <i class="fas fa-edit"></i> Edit
@@ -1564,8 +1564,8 @@ function togglePlanView() {
                 <td>${effectivePeriod}</td>
                 <td>${plan.program || 'Not Set'}</td>
                 <td>${plan.plan || 'Not Set'}</td>
-                <td>${plan.classes || 'Not Set'}</td>
-                <td id="remaining-${plan.id}">Loading...</td>
+                <td class="text-center">${plan.classes || 'Not Set'}</td>
+                <td class="text-center" id="remaining-${plan.id}">Loading...</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
                         <i class="fas fa-edit"></i> Edit
