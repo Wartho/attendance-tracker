@@ -1747,26 +1747,89 @@ function fetchRemainingClasses(planId) {
         .then(data => {
             const remainingCell = document.getElementById(`remaining-${planId}`);
             if (data.success) {
-                remainingCell.textContent = data.remaining;
-                // Add color coding based on remaining classes
-                if (data.remaining <= 0) {
-                    remainingCell.style.color = '#dc3545'; // Red for no remaining classes
-                } else if (data.remaining <= 5) {
-                    remainingCell.style.color = '#ffc107'; // Yellow for low remaining classes
-                } else {
-                    remainingCell.style.color = '#28a745'; // Green for good remaining classes
-                }
+                // Create hyperlink for remaining classes
+                remainingCell.innerHTML = `<a href="#" onclick="showCalculationDetails(${planId}, ${data.remaining}, ${data.attended}, ${data.total}, '${data.effective_from}', '${data.effective_to}'); return false;">${data.remaining}</a>`;
             } else {
                 remainingCell.textContent = 'N/A';
-                remainingCell.style.color = '#6c757d'; // Gray for N/A
             }
         })
         .catch(error => {
             console.error('Error fetching remaining classes:', error);
             const remainingCell = document.getElementById(`remaining-${planId}`);
             remainingCell.textContent = 'Error';
-            remainingCell.style.color = '#dc3545';
         });
+}
+
+function showCalculationDetails(planId, remaining, attended, total, effectiveFrom, effectiveTo) {
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="calculationModal" tabindex="-1" aria-labelledby="calculationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="calculationModalLabel">Remaining Classes Calculation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Plan Details:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Total Classes:</strong> ${total}</li>
+                                    <li><strong>Effective Period:</strong> ${effectiveFrom} to ${effectiveTo}</li>
+                                    <li><strong>Time Range:</strong> 12:01 AM to 11:59 PM</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Attendance Count:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Classes Attended:</strong> ${attended}</li>
+                                    <li><strong>Remaining Classes:</strong> ${remaining}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="calculation-formula">
+                            <h6>Calculation Formula:</h6>
+                            <div class="alert alert-info">
+                                <strong>Remaining = Total Classes - Classes Attended</strong><br>
+                                <strong>${remaining} = ${total} - ${attended}</strong>
+                            </div>
+                        </div>
+                        <div class="audit-info">
+                            <h6>Audit Information:</h6>
+                            <ul>
+                                <li>Attendance records are counted between ${effectiveFrom} 12:01 AM and ${effectiveTo} 11:59 PM</li>
+                                <li>Only attendance records within this date range are included in the calculation</li>
+                                <li>The remaining value cannot go below 0</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('calculationModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal using Bootstrap 5
+    const modal = new bootstrap.Modal(document.getElementById('calculationModal'));
+    modal.show();
+    
+    // Remove modal from DOM when hidden
+    document.getElementById('calculationModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
 }
 </script>
 {% endblock %} 
