@@ -336,8 +336,8 @@
                             <table class="table table-striped" id="planTable">
                                 <thead>
                                     <tr>
-                                        <th>Program</th>
                                         <th>Effective</th>
+                                        <th>Program</th>
                                         <th>Plan</th>
                                         <th>Classes</th>
                                         <th>Actions</th>
@@ -1239,8 +1239,8 @@ function displayPlan(plans) {
         const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${plan.program || 'Not Set'}</td>
             <td>${effectivePeriod}</td>
+            <td>${plan.program || 'Not Set'}</td>
             <td>${plan.plan || 'Not Set'}</td>
             <td>${plan.classes || 'Not Set'}</td>
             <td>
@@ -1556,8 +1556,8 @@ function togglePlanView() {
             const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${plan.program || 'Not Set'}</td>
                 <td>${effectivePeriod}</td>
+                <td>${plan.program || 'Not Set'}</td>
                 <td>${plan.plan || 'Not Set'}</td>
                 <td>${plan.classes || 'Not Set'}</td>
                 <td>

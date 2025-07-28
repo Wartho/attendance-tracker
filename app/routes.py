@@ -908,6 +908,9 @@ def get_plan(student_id):
             'classes': student.classes
         })
     
+    # Sort by effective_date in descending order (most recent first)
+    plans.sort(key=lambda x: x['effective_date'] if x['effective_date'] else '', reverse=True)
+    
     return jsonify({'success': True, 'plans': plans})
 
 @main.route('/student/<int:student_id>/plan', methods=['POST'])
