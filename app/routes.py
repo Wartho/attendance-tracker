@@ -984,4 +984,29 @@ def manage_plan(student_id, plan_id):
             return jsonify({'success': True, 'message': 'Plan updated successfully'})
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': 'Error updating plan'}), 500 
+            return jsonify({'success': False, 'message': 'Error updating plan'}), 500
+
+@main.route('/student/<int:student_id>/attendance_history')
+@login_required
+def get_attendance_history(student_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+    
+    try:
+        # Get attendance history ordered by date descending
+        attendance_history = []
+        for attendance in student.student_attendances.order_by(Attendance.created_at.desc()).all():
+            attendance_history.append({
+                'id': attendance.id,
+                'created_at': attendance.created_at.strftime('%Y-%m-%d %H:%M') + ' PT',
+                'notes': attendance.notes,
+                'teacher_name': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
+            })
+        
+        return jsonify({'success': True, 'attendance_history': attendance_history})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error loading attendance history'}), 500 

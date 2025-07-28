@@ -294,7 +294,7 @@
                     <div class="mt-4">
                         <h4>Attendance History</h4>
                         <div class="table-responsive">
-                            <table class="table table-striped">
+                            <table class="table table-striped" id="attendanceTable">
                                 <thead>
                                     <tr>
                                         <th>Date & Time</th>
@@ -302,14 +302,8 @@
                                         <th>Marked By</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {% for attendance in student.student_attendances.order_by(Attendance.date.desc()).all() %}
-                                    <tr>
-                                        <td>{{ attendance.created_at.strftime('%Y-%m-%d %H:%M') }} PT</td>
-                                        <td>{{ attendance.notes or '' }}</td>
-                                        <td>{{ attendance.teacher.first_name }} {{ attendance.teacher.last_name }}</td>
-                                    </tr>
-                                    {% endfor %}
+                                <tbody id="attendanceBody">
+                                    <!-- Attendance entries will be loaded here -->
                                 </tbody>
                             </table>
                         </div>
@@ -834,7 +828,11 @@ function displayBeltHistory(beltHistory) {
         return;
     }
     
-    beltHistory.forEach(entry => {
+    const maxVisible = 5;
+    const hasMore = beltHistory.length > maxVisible;
+    const visibleEntries = hasMore ? beltHistory.slice(0, maxVisible) : beltHistory;
+    
+    visibleEntries.forEach(entry => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${entry.date_obtained}</td>
@@ -853,6 +851,23 @@ function displayBeltHistory(beltHistory) {
         `;
         tbody.appendChild(row);
     });
+    
+    // Add "See More/Less" functionality
+    if (hasMore) {
+        const seeMoreRow = document.createElement('tr');
+        seeMoreRow.innerHTML = `
+            <td colspan="3" class="text-center">
+                <button class="btn btn-link" onclick="toggleBeltHistoryView()" id="beltHistoryToggleBtn">
+                    See More... (${beltHistory.length - maxVisible} more entries)
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeMoreRow);
+        
+        // Store all entries for toggling
+        window.allBeltHistory = beltHistory;
+        window.beltHistoryViewExpanded = false;
+    }
 }
 
 function toggleBeltHistoryAdd() {
@@ -1015,6 +1030,53 @@ function closeBeltHistoryEdit() {
     }
 }
 
+function toggleBeltHistoryView() {
+    const tbody = document.getElementById('beltHistoryBody');
+    const toggleBtn = document.getElementById('beltHistoryToggleBtn');
+    
+    if (!window.allBeltHistory) return;
+    
+    if (!window.beltHistoryViewExpanded) {
+        // Show all entries
+        tbody.innerHTML = '';
+        window.allBeltHistory.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.date_obtained}</td>
+                <td>
+                    <div class="belt-indicator belt-${entry.belt_level.toLowerCase().replace('-', '-')}"></div>
+                    <span class="belt-level-text">${entry.belt_level}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editBeltHistory(${entry.id}, '${entry.belt_level}', '${entry.date_obtained}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBeltHistory(${entry.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add "See Less" button
+        const seeLessRow = document.createElement('tr');
+        seeLessRow.innerHTML = `
+            <td colspan="3" class="text-center">
+                <button class="btn btn-link" onclick="toggleBeltHistoryView()" id="beltHistoryToggleBtn">
+                    See Less...
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeLessRow);
+        
+        window.beltHistoryViewExpanded = true;
+    } else {
+        // Show only first 5 entries
+        displayBeltHistory(window.allBeltHistory);
+    }
+}
+
 function deleteBeltHistory(id) {
     if (!confirm('Are you sure you want to delete this belt history entry?')) {
         return;
@@ -1169,25 +1231,46 @@ function displayPlan(plans) {
         return;
     }
     
-            plans.forEach(plan => {
-            const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${plan.program || 'Not Set'}</td>
-                <td>${effectivePeriod}</td>
-                <td>${plan.plan || 'Not Set'}</td>
-                <td>${plan.classes || 'Not Set'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
+    const maxVisible = 5;
+    const hasMore = plans.length > maxVisible;
+    const visiblePlans = hasMore ? plans.slice(0, maxVisible) : plans;
+    
+    visiblePlans.forEach(plan => {
+        const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${plan.program || 'Not Set'}</td>
+            <td>${effectivePeriod}</td>
+            <td>${plan.plan || 'Not Set'}</td>
+            <td>${plan.classes || 'Not Set'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Add "See More/Less" functionality
+    if (hasMore) {
+        const seeMoreRow = document.createElement('tr');
+        seeMoreRow.innerHTML = `
+            <td colspan="5" class="text-center">
+                <button class="btn btn-link" onclick="togglePlanView()" id="planToggleBtn">
+                    See More... (${plans.length - maxVisible} more entries)
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeMoreRow);
+        
+        // Store all plans for toggling
+        window.allPlans = plans;
+        window.planViewExpanded = false;
+    }
 }
 
 function calculateEffectivePeriod(effectiveDate, program) {
@@ -1460,6 +1543,53 @@ function closePlanEdit() {
     }
 }
 
+function togglePlanView() {
+    const tbody = document.getElementById('planBody');
+    const toggleBtn = document.getElementById('planToggleBtn');
+    
+    if (!window.allPlans) return;
+    
+    if (!window.planViewExpanded) {
+        // Show all plans
+        tbody.innerHTML = '';
+        window.allPlans.forEach(plan => {
+            const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${plan.program || 'Not Set'}</td>
+                <td>${effectivePeriod}</td>
+                <td>${plan.plan || 'Not Set'}</td>
+                <td>${plan.classes || 'Not Set'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add "See Less" button
+        const seeLessRow = document.createElement('tr');
+        seeLessRow.innerHTML = `
+            <td colspan="5" class="text-center">
+                <button class="btn btn-link" onclick="togglePlanView()" id="planToggleBtn">
+                    See Less...
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeLessRow);
+        
+        window.planViewExpanded = true;
+    } else {
+        // Show only first 5 plans
+        displayPlan(window.allPlans);
+    }
+}
+
 function deletePlan(id) {
     if (!confirm('Are you sure you want to delete this plan entry?')) {
         return;
@@ -1483,12 +1613,106 @@ function deletePlan(id) {
     });
 }
 
-// Load plan data when page loads
+// Load data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadPlan();
+    loadAttendanceHistory();
     // Pre-populate the add plan form with existing data if available
     populatePlanForm();
 });
+
+function loadAttendanceHistory() {
+    fetch(`/student/{{ student.id }}/attendance_history`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayAttendanceHistory(data.attendance_history);
+            } else {
+                console.error('Error loading attendance history:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function displayAttendanceHistory(attendanceHistory) {
+    const tbody = document.getElementById('attendanceBody');
+    tbody.innerHTML = '';
+    
+    if (attendanceHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No attendance history found</td></tr>';
+        return;
+    }
+    
+    const maxVisible = 5;
+    const hasMore = attendanceHistory.length > maxVisible;
+    const visibleEntries = hasMore ? attendanceHistory.slice(0, maxVisible) : attendanceHistory;
+    
+    visibleEntries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.created_at}</td>
+            <td>${entry.notes || ''}</td>
+            <td>${entry.teacher_name}</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Add "See More/Less" functionality
+    if (hasMore) {
+        const seeMoreRow = document.createElement('tr');
+        seeMoreRow.innerHTML = `
+            <td colspan="3" class="text-center">
+                <button class="btn btn-link" onclick="toggleAttendanceHistoryView()" id="attendanceHistoryToggleBtn">
+                    See More... (${attendanceHistory.length - maxVisible} more entries)
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeMoreRow);
+        
+        // Store all entries for toggling
+        window.allAttendanceHistory = attendanceHistory;
+        window.attendanceHistoryViewExpanded = false;
+    }
+}
+
+function toggleAttendanceHistoryView() {
+    const tbody = document.getElementById('attendanceBody');
+    const toggleBtn = document.getElementById('attendanceHistoryToggleBtn');
+    
+    if (!window.allAttendanceHistory) return;
+    
+    if (!window.attendanceHistoryViewExpanded) {
+        // Show all entries
+        tbody.innerHTML = '';
+        window.allAttendanceHistory.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.created_at}</td>
+                <td>${entry.notes || ''}</td>
+                <td>${entry.teacher_name}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add "See Less" button
+        const seeLessRow = document.createElement('tr');
+        seeLessRow.innerHTML = `
+            <td colspan="3" class="text-center">
+                <button class="btn btn-link" onclick="toggleAttendanceHistoryView()" id="attendanceHistoryToggleBtn">
+                    See Less...
+                </button>
+            </td>
+        `;
+        tbody.appendChild(seeLessRow);
+        
+        window.attendanceHistoryViewExpanded = true;
+    } else {
+        // Show only first 5 entries
+        displayAttendanceHistory(window.allAttendanceHistory);
+    }
+}
 
 function populatePlanForm() {
     fetch(`/student/{{ student.id }}/plan`)
