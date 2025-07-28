@@ -228,29 +228,6 @@
                                     <div id="personalInfoDisplay2">
                                         <table class="table table-borderless">
                                             <tr>
-                                                <th style="width: 150px;">Program:</th>
-                                                <td>{{ student.program if student.program else 'Not Set' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Plan:</th>
-                                                <td>{{ student.plan if student.plan else 'Not Set' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Effective:</th>
-                                                <td>
-                                                    {% if student.effective_from or student.effective_to %}
-                                                        {{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else 'Not Set' }} to 
-                                                        {{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else 'Not Set' }}
-                                                    {% else %}
-                                                        Not Set
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Classes:</th>
-                                                <td>{{ student.classes if student.classes else 'Not Set' }}</td>
-                                            </tr>
-                                            <tr>
                                                 <th>Belt Level:</th>
                                                 <td>
                                                     <div class="d-flex align-items-center">
@@ -284,41 +261,6 @@
                                                 </td>
                                             </tr>
                                         </table>
-                                    </div>
-                                    <div id="personalInfoEdit2" style="display: none;">
-                                        <div class="mb-3">
-                                            <label for="edit_program" class="form-label">Program</label>
-                                            <select class="form-select" id="edit_program" name="program">
-                                                <option value="">Not Set</option>
-                                                <option value="3 months" {% if student.program == '3 months' %}selected{% endif %}>3 months</option>
-                                                <option value="6 months" {% if student.program == '6 months' %}selected{% endif %}>6 months</option>
-                                                <option value="1 year" {% if student.program == '1 year' %}selected{% endif %}>1 year</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="edit_plan" class="form-label">Plan</label>
-                                            <select class="form-select" id="edit_plan" name="plan">
-                                                <option value="">Not Set</option>
-                                                <option value="1/week" {% if student.plan == '1/week' %}selected{% endif %}>1/week</option>
-                                                <option value="2/week" {% if student.plan == '2/week' %}selected{% endif %}>2/week</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="edit_effective_from" class="form-label">Effective From</label>
-                                            <input type="date" class="form-control" id="edit_effective_from" name="effective_from" value="{{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else '' }}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="edit_effective_to" class="form-label">Effective To</label>
-                                            <input type="date" class="form-control" id="edit_effective_to" name="effective_to" value="{{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else '' }}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="edit_classes" class="form-label">Classes</label>
-                                            <select class="form-select" id="edit_classes" name="classes">
-                                                <option value="">Not Set</option>
-                                                <option value="48" {% if student.classes == '48' %}selected{% endif %}>48</option>
-                                                <option value="96" {% if student.classes == '96' %}selected{% endif %}>96</option>
-                                            </select>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -780,11 +722,6 @@ function savePersonalInfo() {
         email: document.getElementById('edit_email').value,
         date_of_birth: document.getElementById('edit_date_of_birth').value || null,
         gender: document.getElementById('edit_gender').value || null,
-        program: document.getElementById('edit_program').value || null,
-        plan: document.getElementById('edit_plan').value || null,
-        effective_from: document.getElementById('edit_effective_from').value || null,
-        effective_to: document.getElementById('edit_effective_to').value || null,
-        classes: document.getElementById('edit_classes').value || null,
         phone_number: document.getElementById('edit_phone_number').value || null,
         belt_level: document.getElementById('edit_belt_level').value || null
     };
@@ -839,22 +776,6 @@ function updatePersonalInfoDisplay(data) {
     firstColumnTable.querySelector('tr:nth-child(6) td').textContent = data.gender || 'Not Set';
     firstColumnTable.querySelector('tr:nth-child(7) td').textContent = data.phone_number || 'Not Set';
     
-    // Update second column display
-    const secondColumnTable = document.querySelector('#personalInfoDisplay2 table');
-    secondColumnTable.querySelector('tr:nth-child(1) td').textContent = data.program || 'Not Set';
-    secondColumnTable.querySelector('tr:nth-child(2) td').textContent = data.plan || 'Not Set';
-    
-    // Update Effective field
-    const effectiveCell = secondColumnTable.querySelector('tr:nth-child(3) td');
-    if (data.effective_from || data.effective_to) {
-        const fromDate = data.effective_from ? data.effective_from : 'Not Set';
-        const toDate = data.effective_to ? data.effective_to : 'Not Set';
-        effectiveCell.textContent = `${fromDate} to ${toDate}`;
-    } else {
-        effectiveCell.textContent = 'Not Set';
-    }
-    
-    secondColumnTable.querySelector('tr:nth-child(4) td').textContent = data.classes || 'Not Set';
     // Belt level is handled separately by the belt level update function
 }
 
@@ -1346,6 +1267,25 @@ function deletePlan(id) {
 // Load plan data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadPlan();
+    // Pre-populate the add plan form with existing data if available
+    populatePlanForm();
 });
+
+function populatePlanForm() {
+    fetch(`/student/{{ student.id }}/plan`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.plans.length > 0) {
+                const plan = data.plans[0]; // Get the first plan
+                document.getElementById('new_program').value = plan.program || '';
+                document.getElementById('new_effective_date').value = plan.effective_date || '';
+                document.getElementById('new_plan').value = plan.plan || '';
+                document.getElementById('new_classes').value = plan.classes || '';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading plan data:', error);
+        });
+}
 </script>
 {% endblock %} 

@@ -762,22 +762,6 @@ def update_personal_info(student_id):
                 student.date_of_birth = None
         if 'gender' in data:
             student.gender = data['gender']
-        if 'program' in data:
-            student.program = data['program']
-        if 'plan' in data:
-            student.plan = data['plan']
-        if 'effective_from' in data:
-            if data['effective_from']:
-                student.effective_from = datetime.strptime(data['effective_from'], '%Y-%m-%d').date()
-            else:
-                student.effective_from = None
-        if 'effective_to' in data:
-            if data['effective_to']:
-                student.effective_to = datetime.strptime(data['effective_to'], '%Y-%m-%d').date()
-            else:
-                student.effective_to = None
-        if 'classes' in data:
-            student.classes = data['classes']
         if 'phone_number' in data:
             student.phone_number = data['phone_number']
         if 'belt_level' in data:
@@ -913,15 +897,16 @@ def get_plan(student_id):
     if not student:
         return jsonify({'success': False, 'message': 'Student not found'}), 404
     
-    # For now, return the student's current plan data
-    # In the future, this could be expanded to a separate Plan model
-    plans = [{
-        'id': 1,  # Placeholder ID
-        'program': student.program,
-        'effective_date': student.effective_from.strftime('%Y-%m-%d') if student.effective_from else None,
-        'plan': student.plan,
-        'classes': student.classes
-    }] if student.program or student.plan or student.classes else []
+    # Return the student's current plan data
+    plans = []
+    if student.program or student.plan or student.classes or student.effective_from:
+        plans.append({
+            'id': 1,  # Placeholder ID
+            'program': student.program,
+            'effective_date': student.effective_from.strftime('%Y-%m-%d') if student.effective_from else None,
+            'plan': student.plan,
+            'classes': student.classes
+        })
     
     return jsonify({'success': True, 'plans': plans})
 
