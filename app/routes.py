@@ -940,9 +940,9 @@ def add_plan(student_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': 'Error updating plan'}), 500
 
-@main.route('/student/<int:student_id>/plan/<int:plan_id>', methods=['DELETE'])
+@main.route('/student/<int:student_id>/plan/<int:plan_id>', methods=['PUT', 'DELETE'])
 @login_required
-def delete_plan(student_id, plan_id):
+def manage_plan(student_id, plan_id):
     if not current_user.is_teacher():
         return jsonify({'success': False, 'message': 'Access denied'}), 403
     
@@ -950,16 +950,38 @@ def delete_plan(student_id, plan_id):
     if not student:
         return jsonify({'success': False, 'message': 'Student not found'}), 404
     
-    try:
-        # For now, clear the student's plan information
-        # In the future, this could delete from a separate Plan model
-        student.program = None
-        student.plan = None
-        student.classes = None
-        student.effective_from = None
+    if request.method == 'DELETE':
+        try:
+            # For now, clear the student's plan information
+            # In the future, this could delete from a separate Plan model
+            student.program = None
+            student.plan = None
+            student.classes = None
+            student.effective_from = None
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Plan deleted successfully'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': 'Error deleting plan'}), 500
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
         
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Plan deleted successfully'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': 'Error deleting plan'}), 500 
+        try:
+            # Update the student's plan information
+            if 'program' in data:
+                student.program = data['program']
+            if 'effective_date' in data:
+                from datetime import datetime
+                student.effective_from = datetime.strptime(data['effective_date'], '%Y-%m-%d').date()
+            if 'plan' in data:
+                student.plan = data['plan']
+            if 'classes' in data:
+                student.classes = data['classes']
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Plan updated successfully'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': 'Error updating plan'}), 500 
