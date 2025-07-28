@@ -41,9 +41,9 @@ def generate_dummy_students():
             "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts"
         ]
         
-        programs = ["Kids Program", "Teen Program", "Adult Program", "Competition Team"]
-        plans = ["Monthly", "Quarterly", "Annual", "Drop-in"]
-        classes_list = ["Monday 4PM", "Tuesday 5PM", "Wednesday 6PM", "Thursday 4PM", "Friday 5PM", "Saturday 10AM"]
+        programs = ["3 months", "6 months", "1 year"]
+        plans = ["1/week", "2/week"]
+        classes_list = ["48", "96"]
         belt_levels = ["White", "Yellow", "Green", "Purple", "Purple-Blue", "Blue", "Blue-Brown", "Brown", "Brown-Red", "Red", "Red-Black", "Black"]
         gender_options = ["Male", "Female", "Other"]
         
