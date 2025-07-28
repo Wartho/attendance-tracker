@@ -900,4 +900,81 @@ def check_existing_attendance():
             'exists': existing_attendance is not None
         })
     except Exception as e:
-        return jsonify({'success': False, 'message': 'Error checking attendance'}), 500 
+        return jsonify({'success': False, 'message': 'Error checking attendance'}), 500
+
+# Plan routes
+@main.route('/student/<int:student_id>/plan', methods=['GET'])
+@login_required
+def get_plan(student_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+    
+    # For now, return the student's current plan data
+    # In the future, this could be expanded to a separate Plan model
+    plans = [{
+        'id': 1,  # Placeholder ID
+        'program': student.program,
+        'effective_date': student.effective_from.strftime('%Y-%m-%d') if student.effective_from else None,
+        'plan': student.plan,
+        'classes': student.classes
+    }] if student.program or student.plan or student.classes else []
+    
+    return jsonify({'success': True, 'plans': plans})
+
+@main.route('/student/<int:student_id>/plan', methods=['POST'])
+@login_required
+def add_plan(student_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+    
+    data = request.get_json()
+    
+    try:
+        # Update the student's plan information
+        if 'program' in data:
+            student.program = data['program']
+        if 'effective_date' in data:
+            from datetime import datetime
+            student.effective_from = datetime.strptime(data['effective_date'], '%Y-%m-%d').date()
+        if 'plan' in data:
+            student.plan = data['plan']
+        if 'classes' in data:
+            student.classes = data['classes']
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Plan updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error updating plan'}), 500
+
+@main.route('/student/<int:student_id>/plan/<int:plan_id>', methods=['DELETE'])
+@login_required
+def delete_plan(student_id, plan_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+    
+    try:
+        # For now, clear the student's plan information
+        # In the future, this could delete from a separate Plan model
+        student.program = None
+        student.plan = None
+        student.classes = None
+        student.effective_from = None
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Plan deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error deleting plan'}), 500 
