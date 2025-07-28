@@ -147,87 +147,6 @@
                                                 <td>{{ student.last_name }}</td>
                                             </tr>
                                             <tr>
-                                                <th>Email:</th>
-                                                <td>{{ student.email }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Username:</th>
-                                                <td>{{ student.username }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Date of Birth:</th>
-                                                <td>{{ student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else 'Not Set' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Gender:</th>
-                                                <td>{{ student.gender if student.gender else 'Not Set' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Phone Number:</th>
-                                                <td>{{ student.phone_number if student.phone_number else 'Not Set' }}</td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                    <div id="personalInfoEdit" style="display: none;">
-                                        <form id="personalInfoForm">
-                                            <div class="mb-3">
-                                                <label for="edit_first_name" class="form-label">First Name</label>
-                                                <input type="text" class="form-control" id="edit_first_name" name="first_name" value="{{ student.first_name }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_last_name" class="form-label">Last Name</label>
-                                                <input type="text" class="form-control" id="edit_last_name" name="last_name" value="{{ student.last_name }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_email" class="form-label">Email</label>
-                                                <input type="email" class="form-control" id="edit_email" name="email" value="{{ student.email }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_date_of_birth" class="form-label">Date of Birth</label>
-                                                <input type="date" class="form-control" id="edit_date_of_birth" name="date_of_birth" value="{{ student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else '' }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_gender" class="form-label">Gender</label>
-                                                <select class="form-select" id="edit_gender" name="gender">
-                                                    <option value="">Not Set</option>
-                                                    <option value="Male" {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
-                                                    <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
-                                                    <option value="Other" {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_belt_level" class="form-label">Belt Color</label>
-                                                <select class="form-select" id="edit_belt_level" name="belt_level">
-                                                    <option value="No Belt" {% if student.belt_level == 'No Belt' %}selected{% endif %}>No Belt</option>
-                                                    <option value="White" {% if student.belt_level == 'White' %}selected{% endif %}>White</option>
-                                                    <option value="Yellow" {% if student.belt_level == 'Yellow' %}selected{% endif %}>Yellow</option>
-                                                    <option value="Green" {% if student.belt_level == 'Green' %}selected{% endif %}>Green</option>
-                                                    <option value="Purple" {% if student.belt_level == 'Purple' %}selected{% endif %}>Purple</option>
-                                                    <option value="Purple-Blue" {% if student.belt_level == 'Purple-Blue' %}selected{% endif %}>Purple-Blue</option>
-                                                    <option value="Blue" {% if student.belt_level == 'Blue' %}selected{% endif %}>Blue</option>
-                                                    <option value="Blue-Brown" {% if student.belt_level == 'Blue-Brown' %}selected{% endif %}>Blue-Brown</option>
-                                                    <option value="Brown" {% if student.belt_level == 'Brown' %}selected{% endif %}>Brown</option>
-                                                    <option value="Brown-Red" {% if student.belt_level == 'Brown-Red' %}selected{% endif %}>Brown-Red</option>
-                                                    <option value="Red" {% if student.belt_level == 'Red' %}selected{% endif %}>Red</option>
-                                                    <option value="Red-Black" {% if student.belt_level == 'Red-Black' %}selected{% endif %}>Red-Black</option>
-                                                    <option value="Black" {% if student.belt_level == 'Black' %}selected{% endif %}>Black</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="edit_phone_number" class="form-label">Phone Number</label>
-                                                <input type="tel" class="form-control" id="edit_phone_number" name="phone_number" value="{{ student.phone_number if student.phone_number else '' }}" placeholder="(555) 123-4567">
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-success" onclick="savePersonalInfo()">Save Changes</button>
-                                                <button type="button" class="btn btn-secondary" onclick="togglePersonalInfoEdit()">Cancel</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div id="personalInfoDisplay2">
-                                        <table class="table table-borderless">
-                                            <tr>
                                                 <th>Belt Level:</th>
                                                 <td>
                                                     <div class="d-flex align-items-center">
@@ -259,6 +178,58 @@
                                                         </div>
                                                     </div>
                                                 </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div id="personalInfoEdit" style="display: none;">
+                                        <form id="personalInfoForm">
+                                            <div class="mb-3">
+                                                <label for="edit_first_name" class="form-label">First Name</label>
+                                                <input type="text" class="form-control" id="edit_first_name" name="first_name" value="{{ student.first_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_last_name" class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="edit_last_name" name="last_name" value="{{ student.last_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_belt_level" class="form-label">Belt Color</label>
+                                                <select class="form-select" id="edit_belt_level" name="belt_level">
+                                                    <option value="No Belt" {% if student.belt_level == 'No Belt' %}selected{% endif %}>No Belt</option>
+                                                    <option value="White" {% if student.belt_level == 'White' %}selected{% endif %}>White</option>
+                                                    <option value="Yellow" {% if student.belt_level == 'Yellow' %}selected{% endif %}>Yellow</option>
+                                                    <option value="Green" {% if student.belt_level == 'Green' %}selected{% endif %}>Green</option>
+                                                    <option value="Purple" {% if student.belt_level == 'Purple' %}selected{% endif %}>Purple</option>
+                                                    <option value="Purple-Blue" {% if student.belt_level == 'Purple-Blue' %}selected{% endif %}>Purple-Blue</option>
+                                                    <option value="Blue" {% if student.belt_level == 'Blue' %}selected{% endif %}>Blue</option>
+                                                    <option value="Blue-Brown" {% if student.belt_level == 'Blue-Brown' %}selected{% endif %}>Blue-Brown</option>
+                                                    <option value="Brown" {% if student.belt_level == 'Brown' %}selected{% endif %}>Brown</option>
+                                                    <option value="Brown-Red" {% if student.belt_level == 'Brown-Red' %}selected{% endif %}>Brown-Red</option>
+                                                    <option value="Red" {% if student.belt_level == 'Red' %}selected{% endif %}>Red</option>
+                                                    <option value="Red-Black" {% if student.belt_level == 'Red-Black' %}selected{% endif %}>Red-Black</option>
+                                                    <option value="Black" {% if student.belt_level == 'Black' %}selected{% endif %}>Black</option>
+                                                </select>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-success" onclick="savePersonalInfo()">Save Changes</button>
+                                                <button type="button" class="btn btn-secondary" onclick="togglePersonalInfoEdit()">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="personalInfoDisplay2">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <th style="width: 150px;">Email:</th>
+                                                <td>{{ student.email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Username:</th>
+                                                <td>{{ student.username }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Phone Number:</th>
+                                                <td>{{ student.phone_number if student.phone_number else 'Not Set' }}</td>
                                             </tr>
                                         </table>
                                     </div>

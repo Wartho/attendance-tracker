@@ -13,8 +13,6 @@ class RegistrationForm(FlaskForm):
     role = SelectField('Role', choices=[('student', 'Student'), ('teacher', 'Teacher')], validators=[DataRequired()])
     
     # Optional personal information fields
-    date_of_birth = DateField('Date of Birth', validators=[Optional()], format='%Y-%m-%d')
-    gender = SelectField('Gender', choices=[('', 'Not Set'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], validators=[Optional()])
     program = SelectField('Program', choices=[('', 'Not Set'), ('3 months', '3 months'), ('6 months', '6 months'), ('1 year', '1 year')], validators=[Optional()])
     plan = SelectField('Plan', choices=[('', 'Not Set'), ('1/week', '1/week'), ('2/week', '2/week')], validators=[Optional()])
     effective_from = DateField('Effective From', validators=[Optional()], format='%Y-%m-%d')
@@ -37,8 +35,6 @@ class AddStudentForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     
     # Optional personal information fields
-    date_of_birth = DateField('Date of Birth', validators=[Optional()], format='%Y-%m-%d')
-    gender = SelectField('Gender', choices=[('', 'Not Set'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], validators=[Optional()])
     program = SelectField('Program', choices=[('', 'Not Set'), ('3 months', '3 months'), ('6 months', '6 months'), ('1 year', '1 year')], validators=[Optional()])
     plan = SelectField('Plan', choices=[('', 'Not Set'), ('1/week', '1/week'), ('2/week', '2/week')], validators=[Optional()])
     effective_from = DateField('Effective From', validators=[Optional()], format='%Y-%m-%d')

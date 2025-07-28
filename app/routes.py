@@ -334,8 +334,6 @@ def register():
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             role=form.role.data,
-            date_of_birth=form.date_of_birth.data,
-            gender=form.gender.data if form.gender.data else None,
             program=form.program.data if form.program.data else None,
             plan=form.plan.data if form.plan.data else None,
             classes=form.classes.data if form.classes.data else None,
@@ -371,8 +369,6 @@ def add_student():
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             role='student',
-            date_of_birth=form.date_of_birth.data,
-            gender=form.gender.data if form.gender.data else None,
             program=form.program.data if form.program.data else None,
             plan=form.plan.data if form.plan.data else None,
             classes=form.classes.data if form.classes.data else None,
@@ -755,13 +751,7 @@ def update_personal_info(student_id):
             if existing_user and existing_user.id != student.id:
                 return jsonify({'success': False, 'message': 'Email is already taken by another user'}), 400
             student.email = data['email']
-        if 'date_of_birth' in data:
-            if data['date_of_birth']:
-                student.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
-            else:
-                student.date_of_birth = None
-        if 'gender' in data:
-            student.gender = data['gender']
+
         if 'phone_number' in data:
             student.phone_number = data['phone_number']
         if 'belt_level' in data:
