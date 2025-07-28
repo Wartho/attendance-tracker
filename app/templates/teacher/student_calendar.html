@@ -1764,20 +1764,19 @@ function showCalculationDetails(planId, remaining, attended, total, effectiveFro
     // Create modal HTML
     const modalHtml = `
         <div class="modal fade" id="calculationModal" tabindex="-1" aria-labelledby="calculationModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="calculationModalLabel">Remaining Classes Calculation</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <h6>Plan Details:</h6>
                                 <ul class="list-unstyled">
                                     <li><strong>Total Classes:</strong> ${total}</li>
                                     <li><strong>Effective Period:</strong> ${effectiveFrom} to ${effectiveTo}</li>
-                                    <li><strong>Time Range:</strong> 12:01 AM to 11:59 PM</li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
@@ -1789,20 +1788,16 @@ function showCalculationDetails(planId, remaining, attended, total, effectiveFro
                             </div>
                         </div>
                         <hr>
-                        <div class="calculation-formula">
-                            <h6>Calculation Formula:</h6>
-                            <div class="alert alert-info">
-                                <strong>Remaining = Total Classes - Classes Attended</strong><br>
-                                <strong>${remaining} = ${total} - ${attended}</strong>
+                        <div class="attendance-history">
+                            <h6>Attendance History for This Period:</h6>
+                            <div id="attendanceHistoryList" class="mt-2">
+                                <div class="text-center">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Loading attendance history...</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="audit-info">
-                            <h6>Audit Information:</h6>
-                            <ul>
-                                <li>Attendance records are counted between ${effectiveFrom} 12:01 AM and ${effectiveTo} 11:59 PM</li>
-                                <li>Only attendance records within this date range are included in the calculation</li>
-                                <li>The remaining value cannot go below 0</li>
-                            </ul>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -1830,6 +1825,85 @@ function showCalculationDetails(planId, remaining, attended, total, effectiveFro
     document.getElementById('calculationModal').addEventListener('hidden.bs.modal', function() {
         this.remove();
     });
+    
+    // Load attendance history for this period
+    loadAttendanceHistoryForPeriod(effectiveFrom, effectiveTo);
+}
+
+function loadAttendanceHistoryForPeriod(effectiveFrom, effectiveTo) {
+    const studentId = {{ student.id }};
+    fetch(`/student/${studentId}/attendance_history`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Filter attendance records for the specific period
+                const startDate = new Date(effectiveFrom + ' 00:01:00');
+                const endDate = new Date(effectiveTo + ' 23:59:59');
+                
+                console.log('Filtering period:', effectiveFrom, 'to', effectiveTo);
+                console.log('Start date:', startDate);
+                console.log('End date:', endDate);
+                console.log('All attendance records:', data.attendance_history);
+                
+                const filteredAttendance = data.attendance_history.filter(entry => {
+                    // Parse the date string which includes "PT" timezone
+                    const dateStr = entry.created_at.replace(' PT', '');
+                    const entryDate = new Date(dateStr);
+                    
+                    console.log('Entry date:', entry.created_at, '->', entryDate);
+                    console.log('Is in range:', entryDate >= startDate && entryDate <= endDate);
+                    
+                    return entryDate >= startDate && entryDate <= endDate;
+                });
+                
+                console.log('Filtered attendance:', filteredAttendance);
+                displayAttendanceHistoryInModal(filteredAttendance);
+            } else {
+                document.getElementById('attendanceHistoryList').innerHTML = '<div class="alert alert-warning">Unable to load attendance history</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading attendance history:', error);
+            document.getElementById('attendanceHistoryList').innerHTML = '<div class="alert alert-danger">Error loading attendance history</div>';
+        });
+}
+
+function displayAttendanceHistoryInModal(attendanceHistory) {
+    const container = document.getElementById('attendanceHistoryList');
+    
+    if (attendanceHistory.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No attendance records found for this period</div>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-sm table-striped">';
+    html += '<thead><tr><th style="width: 15%">Date</th><th style="width: 15%">Time</th><th style="width: 50%">Notes</th><th style="width: 20%">Teacher</th></tr></thead><tbody>';
+    
+    attendanceHistory.forEach(entry => {
+        // Parse the date string which includes "PT" timezone
+        const cleanDateStr = entry.created_at.replace(' PT', '');
+        const date = new Date(cleanDateStr);
+        
+        let displayDate, displayTime;
+        if (isNaN(date.getTime())) {
+            // Fallback if date parsing fails
+            displayDate = 'Invalid Date';
+            displayTime = 'Invalid Time';
+        } else {
+            displayDate = date.toLocaleDateString();
+            displayTime = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+        
+        html += `<tr>
+            <td>${displayDate}</td>
+            <td>${displayTime}</td>
+            <td>${entry.notes || ''}</td>
+            <td>${entry.teacher_name || ''}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
 }
 </script>
 {% endblock %} 
