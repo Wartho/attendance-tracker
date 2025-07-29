@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Attendance Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Generate Attendance Reports</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('main.generate_attendance_report') }}" method="POST" target="_blank">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date" class="form-label">Select Date</label>
+                                    <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-file-pdf"></i> Generate Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4">
+                        <h5>Report Information</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-info-circle text-info"></i> The report will show all students who attended on the selected date</li>
+                            <li><i class="fas fa-clock text-info"></i> Students are listed in chronological order (most recent first)</li>
+                            <li><i class="fas fa-print text-info"></i> The report opens in a new tab optimized for printing</li>
+                            <li><i class="fas fa-calendar text-info"></i> Times are displayed in Pacific Timezone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

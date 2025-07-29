@@ -1054,3 +1054,74 @@ def get_attendance_history(student_id):
         return jsonify({'success': True, 'attendance_history': attendance_history})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error loading attendance history'}), 500 
+
+@main.route('/reports')
+@login_required
+def reports():
+    if not current_user.is_teacher():
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    today = get_pacific_date().strftime('%Y-%m-%d')
+    return render_template('teacher/reports.html', today=today)
+
+@main.route('/reports/generate_attendance', methods=['POST'])
+@login_required
+def generate_attendance_report():
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    try:
+        # Get the selected date from the form
+        selected_date_str = request.form.get('date')
+        if not selected_date_str:
+            return jsonify({'success': False, 'message': 'Date is required'}), 400
+        
+        # Parse the date
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        
+        # Convert to datetime range for the selected date (Pacific timezone)
+        start_datetime = datetime.combine(selected_date, time(0, 0, 1))  # 12:00:01 AM
+        end_datetime = datetime.combine(selected_date, time(23, 59, 59))  # 11:59:59 PM
+        
+        # Convert to UTC for database query
+        pacific_start = PACIFIC_TZ.localize(start_datetime)
+        pacific_end = PACIFIC_TZ.localize(end_datetime)
+        utc_start = pacific_start.astimezone(pytz.UTC)
+        utc_end = pacific_end.astimezone(pytz.UTC)
+        
+        # Query attendance records for the selected date
+        attendances = db.session.query(
+            Attendance, User
+        ).join(
+            User, Attendance.student_id == User.id
+        ).filter(
+            Attendance.created_at >= utc_start,
+            Attendance.created_at <= utc_end
+        ).order_by(
+            Attendance.created_at.desc()
+        ).all()
+        
+        # Format the data for the report
+        attendance_data = []
+        for attendance, student in attendances:
+            # Convert UTC back to Pacific for display
+            pacific_time = attendance.created_at.replace(tzinfo=pytz.UTC).astimezone(PACIFIC_TZ)
+            attendance_data.append({
+                'student_name': f"{student.first_name} {student.last_name}",
+                'time': pacific_time.strftime('%I:%M %p'),
+                'date': pacific_time.strftime('%B %d, %Y'),
+                'notes': attendance.notes or 'No notes',
+                'teacher': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
+            })
+        
+        generated_time = get_pacific_now().strftime('%B %d, %Y at %I:%M %p')
+        return render_template('teacher/attendance_report.html', 
+                             attendance_data=attendance_data, 
+                             selected_date=selected_date.strftime('%B %d, %Y'),
+                             total_students=len(attendance_data),
+                             generated_time=generated_time)
+    
+    except Exception as e:
+        logging.error(f"Error generating attendance report: {e}")
+        return jsonify({'success': False, 'message': 'Error generating report'}), 500 
