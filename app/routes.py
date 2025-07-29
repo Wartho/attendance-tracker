@@ -126,12 +126,14 @@ def mark_attendance():
                     'message': f'Attendance already marked for {student.first_name} {student.last_name} today'
                 }), 400
             
-            # Create attendance record
+            # Create attendance record with explicit Pacific timezone
+            pacific_now = get_pacific_now()
             attendance = Attendance(
                 student_id=student.id,
                 date=today,
                 status='present',
-                created_by=current_user.id
+                created_by=current_user.id,
+                created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
             )
             db.session.add(attendance)
             db.session.commit()
@@ -167,13 +169,15 @@ def mark_attendance():
                 
                 attendance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
                 
-                # Create new attendance record (allow duplicates)
+                # Create new attendance record with explicit Pacific timezone
+                pacific_now = get_pacific_now()
                 attendance = Attendance(
                     student_id=student.id,
                     date=attendance_date,
                     status=status,
                     notes=notes,
-                    created_by=current_user.id
+                    created_by=current_user.id,
+                    created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
                 )
                 db.session.add(attendance)
                 
@@ -199,13 +203,15 @@ def mark_attendance():
                         status = request.form[status_key]
                         notes = request.form.get(notes_key, '')
                         
-                        # Create new attendance record (allow duplicates)
+                        # Create new attendance record with explicit Pacific timezone
+                        pacific_now = get_pacific_now()
                         attendance = Attendance(
                             student_id=student.id,
                             date=attendance_date,
                             status=status,
                             notes=notes,
-                            created_by=current_user.id
+                            created_by=current_user.id,
+                            created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
                         )
                         db.session.add(attendance)
                 
@@ -246,13 +252,15 @@ def scan_qr():
             flash('Attendance can only be marked between 9 AM and 9 PM Pacific time.', 'danger')
             return redirect(url_for('main.scan_qr'))
         
-        # Create new attendance record (allow duplicates)
+        # Create new attendance record with explicit Pacific timezone
         today = datetime.now(pacific).date()
+        pacific_now = get_pacific_now()
         attendance = Attendance(
             student_id=student.id,
             date=today,
             status='present',
-            created_by=current_user.id
+            created_by=current_user.id,
+            created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
         )
         db.session.add(attendance)
         db.session.commit()
@@ -1044,9 +1052,12 @@ def get_attendance_history(student_id):
         # Get attendance history ordered by date descending
         attendance_history = []
         for attendance in student.student_attendances.order_by(Attendance.created_at.desc()).all():
+            # Since created_at is stored as Pacific time (naive), we can format it directly
+            # But we need to ensure it's treated as Pacific time, not UTC
+            pacific_time = attendance.created_at
             attendance_history.append({
                 'id': attendance.id,
-                'created_at': attendance.created_at.strftime('%Y-%m-%d %H:%M') + ' PT',
+                'created_at': pacific_time.strftime('%Y-%m-%d %H:%M') + ' PT',
                 'notes': attendance.notes,
                 'teacher_name': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
             })
@@ -1084,20 +1095,18 @@ def generate_attendance_report():
         start_datetime = datetime.combine(selected_date, time(0, 0, 1))  # 12:00:01 AM
         end_datetime = datetime.combine(selected_date, time(23, 59, 59))  # 11:59:59 PM
         
-        # Convert to UTC for database query
-        pacific_start = PACIFIC_TZ.localize(start_datetime)
-        pacific_end = PACIFIC_TZ.localize(end_datetime)
-        utc_start = pacific_start.astimezone(pytz.UTC)
-        utc_end = pacific_end.astimezone(pytz.UTC)
+        # Query attendance records for the selected date in Pacific time
+        # Since created_at is stored as Pacific time (naive), we query directly
+        pacific_start = start_datetime
+        pacific_end = end_datetime
         
-        # Query attendance records for the selected date
         attendances = db.session.query(
             Attendance, User
         ).join(
             User, Attendance.student_id == User.id
         ).filter(
-            Attendance.created_at >= utc_start,
-            Attendance.created_at <= utc_end
+            Attendance.created_at >= pacific_start,
+            Attendance.created_at <= pacific_end
         ).order_by(
             Attendance.created_at.desc()
         ).all()
@@ -1105,8 +1114,8 @@ def generate_attendance_report():
         # Format the data for the report
         attendance_data = []
         for attendance, student in attendances:
-            # Convert UTC back to Pacific for display
-            pacific_time = attendance.created_at.replace(tzinfo=pytz.UTC).astimezone(PACIFIC_TZ)
+            # Since created_at is stored as Pacific time (naive), we can format it directly
+            pacific_time = attendance.created_at
             attendance_data.append({
                 'student_name': f"{student.first_name} {student.last_name}",
                 'time': pacific_time.strftime('%I:%M %p'),
