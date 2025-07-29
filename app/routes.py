@@ -740,18 +740,23 @@ def update_personal_info(student_id):
         return jsonify({'success': False, 'message': 'No data provided'}), 400
     
     try:
-        # Update allowed fields (excluding username)
+        # Update allowed fields
         if 'first_name' in data:
             student.first_name = data['first_name']
         if 'last_name' in data:
             student.last_name = data['last_name']
+        if 'username' in data:
+            # Check if username is already taken by another user
+            existing_user = User.query.filter_by(username=data['username']).first()
+            if existing_user and existing_user.id != student.id:
+                return jsonify({'success': False, 'message': 'Username is already taken by another user'}), 400
+            student.username = data['username']
         if 'email' in data:
             # Check if email is already taken by another user
             existing_user = User.query.filter_by(email=data['email']).first()
             if existing_user and existing_user.id != student.id:
                 return jsonify({'success': False, 'message': 'Email is already taken by another user'}), 400
             student.email = data['email']
-
         if 'phone_number' in data:
             student.phone_number = data['phone_number']
         if 'belt_level' in data:
