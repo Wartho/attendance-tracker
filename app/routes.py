@@ -484,7 +484,8 @@ def student_calendar(student_id):
     # --- Attendance Stats for last 12 months ---
     today = get_pacific_date()
     stats = OrderedDict()
-    for i in range(11, -1, -1):
+    # Create months in reverse chronological order (most recent first)
+    for i in range(0, 12):
         month = (today.month - i - 1) % 12 + 1
         year = today.year if today.month - i > 0 else today.year - 1
         label = f"{calendar.month_abbr[month]} {str(year)[2:]}"
