@@ -72,15 +72,101 @@
     background: linear-gradient(45deg, #dc3545 50%, #000000 50%);
 }
 
-@media (max-width: 400px) {
+/* Mobile responsive styles for all sections */
+@media (max-width: 768px) {
+  /* Personal Information section */
+  .personal-info-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .personal-info-table {
+    min-width: 500px;
+    width: 100%;
+  }
+  
+  /* Attendance Stats section */
+  .attendance-stats-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .attendance-stats-table {
+    min-width: 600px;
+    width: 100%;
+  }
+  
+  /* Attendance History section */
+  .attendance-history-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .attendance-history-table {
+    min-width: 400px;
+    width: 100%;
+  }
+  
+  /* Plan section */
+  .plan-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .plan-table {
+    min-width: 600px;
+    width: 100%;
+  }
+  
+  /* Belt History section */
+  .belt-history-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .belt-history-table {
+    min-width: 500px;
+    width: 100%;
+  }
+  
+  /* Calendar section */
   .calendar-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
   }
+  
   #calendarGrid {
     min-width: 350px;
     width: 100%;
+  }
+  
+  /* Profile picture container */
+  .profile-picture-container {
+    width: 120px;
+    height: 160px;
+  }
+  
+  .profile-picture-container img,
+  .profile-picture-container div {
+    width: 120px !important;
+    height: 160px !important;
+  }
+  
+  /* Button groups */
+  .btn-group-responsive {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .btn-group-responsive .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
   }
 }
 </style>
@@ -135,8 +221,8 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div id="personalInfoDisplay">
-                                        <table class="table table-borderless">
+                                    <div id="personalInfoDisplay" class="personal-info-container">
+                                        <table class="table table-borderless personal-info-table">
                                             <tr>
                                                 <th style="width: 150px;">First Name:</th>
                                                 <td>{{ student.first_name }}</td>
@@ -234,8 +320,8 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div id="personalInfoDisplay2">
-                                        <table class="table table-borderless">
+                                    <div id="personalInfoDisplay2" class="personal-info-container">
+                                        <table class="table table-borderless personal-info-table">
                                             <tr>
                                                 <th style="width: 150px;">Email:</th>
                                                 <td>{{ student.email }}</td>
@@ -258,8 +344,8 @@
                     <!-- Attendance Stats Section -->
                     <div class="mt-4">
                         <h4>Attendance Stats (Last 12 Months)</h4>
-                        <div class="table-responsive">
-                            <table class="table table-bordered text-center align-middle">
+                        <div class="table-responsive attendance-stats-container">
+                            <table class="table table-bordered text-center align-middle attendance-stats-table">
                                 <thead>
                                     <tr>
                                         {% for month in attendance_stats.keys() %}
@@ -281,8 +367,8 @@
                     <!-- Attendance Table -->
                     <div class="mt-4">
                         <h4>Attendance History</h4>
-                        <div class="table-responsive">
-                            <table class="table table-striped" id="attendanceTable">
+                        <div class="table-responsive attendance-history-container">
+                            <table class="table table-striped attendance-history-table" id="attendanceTable">
                                 <thead>
                                     <tr>
                                         <th>Date & Time</th>
@@ -320,8 +406,8 @@
                                 <i class="fas fa-plus"></i> Add Plan
                             </button>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped" id="planTable">
+                        <div class="table-responsive plan-container">
+                            <table class="table table-striped plan-table" id="planTable">
                                 <thead>
                                     <tr>
                                         <th>Effective</th>
@@ -412,8 +498,8 @@
                                 <i class="fas fa-plus"></i> Add Entry
                             </button>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped" id="beltHistoryTable">
+                        <div class="table-responsive belt-history-container">
+                            <table class="table table-striped belt-history-table" id="beltHistoryTable">
                                 <thead>
                                     <tr>
                                         <th>Date Obtained</th>
