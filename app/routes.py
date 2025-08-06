@@ -1112,6 +1112,7 @@ def get_attendance_history(student_id):
             attendance_history.append({
                 'id': attendance.id,
                 'created_at': pacific_time.strftime('%Y-%m-%d %H:%M') + ' PT',
+                'attended_date': attendance.date.strftime('%Y-%m-%d'),
                 'notes': notes_display,
                 'free_class': attendance.free_class,
                 'teacher_name': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
