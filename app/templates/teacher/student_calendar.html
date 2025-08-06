@@ -169,32 +169,11 @@
                                                 <th>Belt Level:</th>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        {% if student.belt_level and student.belt_level != 'Not Set' and student.belt_level != 'No Belt' %}
-                                                            <div class="belt-indicator belt-{{ student.belt_level.lower().replace('-', '-') }}" style="cursor: pointer; margin-right: 8px;" onclick="toggleBeltLevelEdit()"></div>
+                                                        {% if latest_belt_level and latest_belt_level != 'Not Set' and latest_belt_level != 'No Belt' %}
+                                                            <div class="belt-indicator belt-{{ latest_belt_level.lower().replace('-', '-') }}" style="margin-right: 8px;"></div>
                                                         {% endif %}
-                                                        <span id="beltLevelDisplay" style="cursor: pointer;" onclick="toggleBeltLevelEdit()">{{ student.belt_level }}</span>
-                                                    </div>
-                                                    <div id="beltLevelEdit" style="display: none;" class="mt-2">
-                                                        <select class="form-select form-select-sm" id="beltLevelSelect">
-                                                            <option value="Not Set" {% if student.belt_level == 'Not Set' %}selected{% endif %}>Not Set</option>
-                                                            <option value="No Belt" {% if student.belt_level == 'No Belt' %}selected{% endif %}>No Belt</option>
-                                                            <option value="White" {% if student.belt_level == 'White' %}selected{% endif %}>White</option>
-                                                            <option value="Yellow" {% if student.belt_level == 'Yellow' %}selected{% endif %}>Yellow</option>
-                                                            <option value="Green" {% if student.belt_level == 'Green' %}selected{% endif %}>Green</option>
-                                                            <option value="Purple" {% if student.belt_level == 'Purple' %}selected{% endif %}>Purple</option>
-                                                            <option value="Purple-Blue" {% if student.belt_level == 'Purple-Blue' %}selected{% endif %}>Purple-Blue</option>
-                                                            <option value="Blue" {% if student.belt_level == 'Blue' %}selected{% endif %}>Blue</option>
-                                                            <option value="Blue-Brown" {% if student.belt_level == 'Blue-Brown' %}selected{% endif %}>Blue-Brown</option>
-                                                            <option value="Brown" {% if student.belt_level == 'Brown' %}selected{% endif %}>Brown</option>
-                                                            <option value="Brown-Red" {% if student.belt_level == 'Brown-Red' %}selected{% endif %}>Brown-Red</option>
-                                                            <option value="Red" {% if student.belt_level == 'Red' %}selected{% endif %}>Red</option>
-                                                            <option value="Red-Black" {% if student.belt_level == 'Red-Black' %}selected{% endif %}>Red-Black</option>
-                                                            <option value="Black" {% if student.belt_level == 'Black' %}selected{% endif %}>Black</option>
-                                                        </select>
-                                                        <div class="mt-2">
-                                                            <button class="btn btn-sm btn-success" onclick="updateBeltLevel()">Save</button>
-                                                            <button class="btn btn-sm btn-secondary" onclick="toggleBeltLevelEdit()">Cancel</button>
-                                                        </div>
+                                                        <span>{{ latest_belt_level if latest_belt_level else 'Not Set' }}</span>
+                                                        <small class="text-muted ms-2">(from Belt History)</small>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -752,57 +731,7 @@ document.getElementById('cropButton').addEventListener('click', function() {
     }, 'image/jpeg');
 });
 
-// Belt Level functions
-function toggleBeltLevelEdit() {
-    const display = document.getElementById('beltLevelDisplay');
-    const edit = document.getElementById('beltLevelEdit');
-    if (display.style.display !== 'none') {
-        display.style.display = 'none';
-        edit.style.display = 'block';
-    } else {
-        display.style.display = 'inline';
-        edit.style.display = 'none';
-    }
-}
-
-function updateBeltLevel() {
-    const newLevel = document.getElementById('beltLevelSelect').value;
-    fetch(`/student/{{ student.id }}/update_belt_level`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ belt_level: newLevel })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('beltLevelDisplay').textContent = newLevel;
-            
-            // Update the belt color indicator
-            const beltLevelContainer = document.getElementById('beltLevelDisplay').parentElement;
-            let existingIndicator = beltLevelContainer.querySelector('.belt-indicator');
-            
-            // Remove existing indicator if it exists
-            if (existingIndicator) {
-                existingIndicator.remove();
-            }
-            
-            // Add new indicator if belt level is valid
-            if (newLevel && newLevel !== 'Not Set' && newLevel !== 'No Belt') {
-                const newIndicator = document.createElement('div');
-                newIndicator.className = `belt-indicator belt-${newLevel.toLowerCase().replace('-', '-')}`;
-                newIndicator.style.cursor = 'pointer';
-                newIndicator.onclick = toggleBeltLevelEdit;
-                beltLevelContainer.appendChild(newIndicator);
-            }
-            
-            toggleBeltLevelEdit();
-        } else {
-            alert('Error updating belt level');
-        }
-    });
-}
+// Belt Level is now read-only and displays the latest belt from Belt History
 
 // Personal Information functions
 function togglePersonalInfoEdit() {

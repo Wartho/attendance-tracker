@@ -135,8 +135,8 @@
                                         <td class="d-none">{{ student.username }}</td>
                                         <td class="fw-bold">{{ student.first_name }} {{ student.last_name }}</td>
                                         <td>
-                                            {% if student.belt_level and student.belt_level != 'Not Set' %}
-                                                <div class="belt-indicator belt-{{ student.belt_level.lower().replace('-', '-').replace(' ', '-') }}"></div>
+                                            {% if student.latest_belt_level and student.latest_belt_level != 'Not Set' %}
+                                                <div class="belt-indicator belt-{{ student.latest_belt_level.lower().replace('-', '-').replace(' ', '-') }}"></div>
                                             {% else %}
                                                 <span class="text-muted">Not Set</span>
                                             {% endif %}

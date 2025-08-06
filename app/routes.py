@@ -74,6 +74,12 @@ def teacher_home():
             student.last_attended = pacific_time
         else:
             student.last_attended = last_attended
+        
+        # Get the latest belt from belt history
+        from app.models import BeltHistory
+        latest_belt = BeltHistory.query.filter_by(student_id=student.id).order_by(BeltHistory.date_obtained.desc()).first()
+        student.latest_belt_level = latest_belt.belt_level if latest_belt else student.belt_level
+        
         students.append(student)
     
     today = get_pacific_date().strftime('%Y-%m-%d')
@@ -567,8 +573,14 @@ def student_calendar(student_id):
             'marked_by': teacher_name
         }
         attendance_events.append(event)
+    # Get the latest belt from belt history
+    from app.models import BeltHistory
+    latest_belt = BeltHistory.query.filter_by(student_id=student.id).order_by(BeltHistory.date_obtained.desc()).first()
+    latest_belt_level = latest_belt.belt_level if latest_belt else student.belt_level
+    
     return render_template('teacher/student_calendar.html', 
                          student=student, 
+                         latest_belt_level=latest_belt_level,
                          attendance_events=attendance_events,
                          today=get_pacific_date().strftime('%Y-%m-%d'),
                          Attendance=Attendance,
