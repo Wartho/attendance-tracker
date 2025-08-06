@@ -1012,6 +1012,65 @@ def get_plan_remaining(student_id, plan_id):
         'effective_to': effective_to.strftime('%Y-%m-%d')
     })
 
+@main.route('/student/<int:student_id>/plan/<int:plan_id>/details', methods=['GET'])
+def get_plan_details(student_id, plan_id):
+    """Get detailed attendance data for plan calculation"""
+    student = User.query.get_or_404(student_id)
+    
+    # Get the plan data (currently stored in User model)
+    if not student.program or not student.effective_from:
+        return jsonify({'success': False, 'message': 'No plan data found'})
+    
+    # Calculate effective end date based on program
+    effective_to = None
+    if student.program == "3 months":
+        effective_to = student.effective_from + timedelta(days=90)
+    elif student.program == "6 months":
+        effective_to = student.effective_from + timedelta(days=180)
+    elif student.program == "1 year":
+        effective_to = student.effective_from + timedelta(days=365)
+    
+    if not effective_to:
+        return jsonify({'success': False, 'message': 'Invalid program duration'})
+    
+    # Set time range (12:01am to 11:59pm)
+    start_datetime = datetime.combine(student.effective_from, time(0, 1))  # 12:01am
+    end_datetime = datetime.combine(effective_to, time(23, 59))  # 11:59pm
+    
+    # Get attended classes in the date range (excluding free classes)
+    from app.models import Attendance
+    attended_classes = Attendance.query.filter(
+        Attendance.student_id == student_id,
+        Attendance.created_at >= start_datetime,
+        Attendance.created_at <= end_datetime,
+        Attendance.free_class == False  # Exclude free classes from plan calculation
+    ).order_by(Attendance.created_at.desc()).all()
+    
+    # Format attendance data for display
+    attendance_details = []
+    for attendance in attended_classes:
+        attendance_details.append({
+            'date': attendance.date.strftime('%Y-%m-%d'),
+            'created_at': attendance.created_at.strftime('%Y-%m-%d %H:%M') + ' PT',
+            'notes': attendance.notes or '',
+            'marked_by': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
+        })
+    
+    # Calculate totals
+    attended_count = len(attended_classes)
+    total_classes = int(student.classes) if student.classes and student.classes.isdigit() else 0
+    remaining = max(0, total_classes - attended_count)
+    
+    return jsonify({
+        'success': True,
+        'remaining': remaining,
+        'attended': attended_count,
+        'total': total_classes,
+        'effective_from': student.effective_from.strftime('%Y-%m-%d'),
+        'effective_to': effective_to.strftime('%Y-%m-%d'),
+        'attendance_details': attendance_details
+    })
+
 @main.route('/student/<int:student_id>/plan', methods=['POST'])
 @login_required
 def add_plan(student_id):
@@ -1028,9 +1087,12 @@ def add_plan(student_id):
         # Update the student's plan information
         if 'program' in data:
             student.program = data['program']
-        if 'effective_date' in data:
+        if 'effective_from' in data and data['effective_from']:
             from datetime import datetime
-            student.effective_from = datetime.strptime(data['effective_date'], '%Y-%m-%d').date()
+            student.effective_from = datetime.strptime(data['effective_from'], '%Y-%m-%d').date()
+        if 'effective_to' in data and data['effective_to']:
+            from datetime import datetime
+            student.effective_to = datetime.strptime(data['effective_to'], '%Y-%m-%d').date()
         if 'plan' in data:
             student.plan = data['plan']
         if 'classes' in data:
