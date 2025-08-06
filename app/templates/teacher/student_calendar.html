@@ -71,104 +71,6 @@
 .belt-red-black {
     background: linear-gradient(45deg, #dc3545 50%, #000000 50%);
 }
-
-/* Mobile responsive styles for all sections */
-@media (max-width: 768px) {
-  /* Personal Information section */
-  .personal-info-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  .personal-info-table {
-    min-width: 500px;
-    width: 100%;
-  }
-  
-  /* Attendance Stats section */
-  .attendance-stats-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  .attendance-stats-table {
-    min-width: 600px;
-    width: 100%;
-  }
-  
-  /* Attendance History section */
-  .attendance-history-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  .attendance-history-table {
-    min-width: 400px;
-    width: 100%;
-  }
-  
-  /* Plan section */
-  .plan-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  .plan-table {
-    min-width: 600px;
-    width: 100%;
-  }
-  
-  /* Belt History section */
-  .belt-history-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  .belt-history-table {
-    min-width: 500px;
-    width: 100%;
-  }
-  
-  /* Calendar section */
-  .calendar-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-  
-  #calendarGrid {
-    min-width: 350px;
-    width: 100%;
-  }
-  
-  /* Profile picture container */
-  .profile-picture-container {
-    width: 120px;
-    height: 160px;
-  }
-  
-  .profile-picture-container img,
-  .profile-picture-container div {
-    width: 120px !important;
-    height: 160px !important;
-  }
-  
-  /* Button groups */
-  .btn-group-responsive {
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  
-  .btn-group-responsive .btn {
-    font-size: 0.875rem;
-    padding: 0.375rem 0.75rem;
-  }
-}
 </style>
 {% endblock %}
 
@@ -178,16 +80,14 @@
         <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">{{ student.first_name }} {{ student.last_name }}'s Profile</h3>
-                        <div>
-                            <a href="{{ url_for('main.print_student_qr', student_id=student.id) }}" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-qrcode"></i> Print QR
-                            </a>
-                            <button type="button" class="btn btn-outline-primary" onclick="openMarkAttendanceModal({{ student.id }}, '{{ student.first_name }} {{ student.last_name }}')">
-                                <i class="fas fa-calendar-check"></i> Mark
-                            </button>
-                        </div>
+                    <h3 class="mb-0">{{ student.first_name }} {{ student.last_name }}'s Profile</h3>
+                    <div>
+                        <a href="{{ url_for('main.print_student_qr', student_id=student.id) }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-qrcode"></i> Print QR
+                        </a>
+                        <button type="button" class="btn btn-outline-primary me-2" onclick="openMarkAttendanceModal({{ student.id }}, '{{ student.first_name }} {{ student.last_name }}')">
+                            <i class="fas fa-calendar-check"></i> Mark
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -221,8 +121,8 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div id="personalInfoDisplay" class="personal-info-container">
-                                        <table class="table table-borderless personal-info-table">
+                                    <div id="personalInfoDisplay">
+                                        <table class="table table-borderless">
                                             <tr>
                                                 <th style="width: 150px;">First Name:</th>
                                                 <td>{{ student.first_name }}</td>
@@ -230,6 +130,63 @@
                                             <tr>
                                                 <th>Last Name:</th>
                                                 <td>{{ student.last_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email:</th>
+                                                <td>{{ student.email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Username:</th>
+                                                <td>{{ student.username }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div id="personalInfoEdit" style="display: none;">
+                                        <form id="personalInfoForm">
+                                            <div class="mb-3">
+                                                <label for="edit_first_name" class="form-label">First Name</label>
+                                                <input type="text" class="form-control" id="edit_first_name" name="first_name" value="{{ student.first_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_last_name" class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="edit_last_name" name="last_name" value="{{ student.last_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_email" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="edit_email" name="email" value="{{ student.email }}" required>
+                                            </div>
+                                                                                    <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-success" onclick="savePersonalInfo()">Save Changes</button>
+                                            <button type="button" class="btn btn-secondary" onclick="togglePersonalInfoEdit()">Cancel</button>
+                                        </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="personalInfoDisplay2">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <th style="width: 150px;">Program:</th>
+                                                <td>{{ student.program if student.program else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Plan:</th>
+                                                <td>{{ student.plan if student.plan else 'Not Set' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Effective:</th>
+                                                <td>
+                                                    {% if student.effective_from or student.effective_to %}
+                                                        {{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else 'Not Set' }} to 
+                                                        {{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else 'Not Set' }}
+                                                    {% else %}
+                                                        Not Set
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Classes:</th>
+                                                <td>{{ student.classes if student.classes else 'Not Set' }}</td>
                                             </tr>
                                             <tr>
                                                 <th>Belt Level:</th>
@@ -266,75 +223,40 @@
                                             </tr>
                                         </table>
                                     </div>
-                                    <div id="personalInfoEdit" style="display: none;">
-                                        <form id="personalInfoForm">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="edit_first_name" class="form-label">First Name</label>
-                                                        <input type="text" class="form-control" id="edit_first_name" name="first_name" value="{{ student.first_name }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="edit_last_name" class="form-label">Last Name</label>
-                                                        <input type="text" class="form-control" id="edit_last_name" name="last_name" value="{{ student.last_name }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="edit_belt_level" class="form-label">Belt Color</label>
-                                                        <select class="form-select" id="edit_belt_level" name="belt_level">
-                                                            <option value="No Belt" {% if student.belt_level == 'No Belt' %}selected{% endif %}>No Belt</option>
-                                                            <option value="White" {% if student.belt_level == 'White' %}selected{% endif %}>White</option>
-                                                            <option value="Yellow" {% if student.belt_level == 'Yellow' %}selected{% endif %}>Yellow</option>
-                                                            <option value="Green" {% if student.belt_level == 'Green' %}selected{% endif %}>Green</option>
-                                                            <option value="Purple" {% if student.belt_level == 'Purple' %}selected{% endif %}>Purple</option>
-                                                            <option value="Purple-Blue" {% if student.belt_level == 'Purple-Blue' %}selected{% endif %}>Purple-Blue</option>
-                                                            <option value="Blue" {% if student.belt_level == 'Blue' %}selected{% endif %}>Blue</option>
-                                                            <option value="Blue-Brown" {% if student.belt_level == 'Blue-Brown' %}selected{% endif %}>Blue-Brown</option>
-                                                            <option value="Brown" {% if student.belt_level == 'Brown' %}selected{% endif %}>Brown</option>
-                                                            <option value="Brown-Red" {% if student.belt_level == 'Brown-Red' %}selected{% endif %}>Brown-Red</option>
-                                                            <option value="Red" {% if student.belt_level == 'Red' %}selected{% endif %}>Red</option>
-                                                            <option value="Red-Black" {% if student.belt_level == 'Red-Black' %}selected{% endif %}>Red-Black</option>
-                                                            <option value="Black" {% if student.belt_level == 'Black' %}selected{% endif %}>Black</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="edit_email" class="form-label">Email</label>
-                                                        <input type="email" class="form-control" id="edit_email" name="email" value="{{ student.email }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="edit_username" class="form-label">Username</label>
-                                                        <input type="text" class="form-control" id="edit_username" name="username" value="{{ student.username }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="edit_phone_number" class="form-label">Phone Number</label>
-                                                        <input type="tel" class="form-control" id="edit_phone_number" name="phone_number" value="{{ student.phone_number if student.phone_number else '' }}" placeholder="(555) 123-4567">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-success" onclick="savePersonalInfo()">Save Changes</button>
-                                                <button type="button" class="btn btn-secondary" onclick="togglePersonalInfoEdit()">Cancel</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div id="personalInfoDisplay2" class="personal-info-container">
-                                        <table class="table table-borderless personal-info-table">
-                                            <tr>
-                                                <th style="width: 150px;">Email:</th>
-                                                <td>{{ student.email }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Username:</th>
-                                                <td>{{ student.username }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Phone Number:</th>
-                                                <td>{{ student.phone_number if student.phone_number else 'Not Set' }}</td>
-                                            </tr>
-                                        </table>
+                                    <div id="personalInfoEdit2" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="edit_program" class="form-label">Program</label>
+                                            <select class="form-select" id="edit_program" name="program">
+                                                <option value="">Not Set</option>
+                                                <option value="3 months" {% if student.program == '3 months' %}selected{% endif %}>3 months</option>
+                                                <option value="6 months" {% if student.program == '6 months' %}selected{% endif %}>6 months</option>
+                                                <option value="1 year" {% if student.program == '1 year' %}selected{% endif %}>1 year</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_plan" class="form-label">Plan</label>
+                                            <select class="form-select" id="edit_plan" name="plan">
+                                                <option value="">Not Set</option>
+                                                <option value="1/week" {% if student.plan == '1/week' %}selected{% endif %}>1/week</option>
+                                                <option value="2/week" {% if student.plan == '2/week' %}selected{% endif %}>2/week</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_effective_from" class="form-label">Effective From</label>
+                                            <input type="date" class="form-control" id="edit_effective_from" name="effective_from" value="{{ student.effective_from.strftime('%Y-%m-%d') if student.effective_from else '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_effective_to" class="form-label">Effective To</label>
+                                            <input type="date" class="form-control" id="edit_effective_to" name="effective_to" value="{{ student.effective_to.strftime('%Y-%m-%d') if student.effective_to else '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="edit_classes" class="form-label">Classes</label>
+                                            <select class="form-select" id="edit_classes" name="classes">
+                                                <option value="">Not Set</option>
+                                                <option value="48" {% if student.classes == '48' %}selected{% endif %}>48</option>
+                                                <option value="96" {% if student.classes == '96' %}selected{% endif %}>96</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -344,8 +266,8 @@
                     <!-- Attendance Stats Section -->
                     <div class="mt-4">
                         <h4>Attendance Stats (Last 12 Months)</h4>
-                        <div class="table-responsive attendance-stats-container">
-                            <table class="table table-bordered text-center align-middle attendance-stats-table">
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center align-middle">
                                 <thead>
                                     <tr>
                                         {% for month in attendance_stats.keys() %}
@@ -367,17 +289,18 @@
                     <!-- Attendance Table -->
                     <div class="mt-4">
                         <h4>Attendance History</h4>
-                        <div class="table-responsive attendance-history-container">
-                            <table class="table table-striped attendance-history-table" id="attendanceTable">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="attendanceHistoryTable">
                                 <thead>
                                     <tr>
                                         <th>Date & Time</th>
                                         <th>Notes</th>
                                         <th>Marked By</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="attendanceBody">
-                                    <!-- Attendance entries will be loaded here -->
+                                <tbody id="attendanceHistoryBody">
+                                    <!-- Attendance history will be loaded here -->
                                 </tbody>
                             </table>
                         </div>
@@ -386,7 +309,7 @@
                     <!-- Calendar Section -->
                     <div class="mt-4">
                         <h4>Attendance Calendar</h4>
-                        <div class="calendar-responsive" style="margin-top: 20px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px;">
+                        <div style="margin-top: 20px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <button id="prevMonthBtn" class="btn btn-outline-primary">&lt; Previous</button>
                                 <h4 id="currentMonth">Loading...</h4>
@@ -394,98 +317,6 @@
                             </div>
                             <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
                                 <!-- Calendar will be populated here -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Plan Section -->
-                    <div class="mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h4>Plan</h4>
-                            <button class="btn btn-sm btn-outline-primary" onclick="togglePlanAdd()" id="addPlanBtn">
-                                <i class="fas fa-plus"></i> Add Plan
-                            </button>
-                        </div>
-                        <div class="table-responsive plan-container">
-                            <table class="table table-striped plan-table" id="planTable">
-                                <thead>
-                                    <tr>
-                                        <th>Effective</th>
-                                        <th>Program</th>
-                                        <th>Plan</th>
-                                        <th class="text-center">Classes</th>
-                                        <th class="text-center">Remaining</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="planBody">
-                                    <!-- Plan entries will be loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Add/Edit Plan Form -->
-                        <div id="addPlanForm" style="display: none;" class="mt-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title" id="planFormTitle">Add Plan Entry</h6>
-                                    <input type="hidden" id="editing_plan_id" value="">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="new_program" class="form-label">Program</label>
-                                                <select class="form-select" id="new_program" required onchange="updateEffectiveEndDate()">
-                                                    <option value="">Select Program</option>
-                                                    <option value="3 months">3 months</option>
-                                                    <option value="6 months">6 months</option>
-                                                    <option value="1 year">1 year</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="new_effective_date" class="form-label">Effective Date</label>
-                                                <input type="date" class="form-control" id="new_effective_date" required onchange="updateEffectiveEndDate()">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="new_plan" class="form-label">Plan</label>
-                                                <select class="form-select" id="new_plan" required>
-                                                    <option value="">Select Plan</option>
-                                                    <option value="1/week">1/week</option>
-                                                    <option value="2/week">2/week</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="new_classes" class="form-label">Classes</label>
-                                                <select class="form-select" id="new_classes" required>
-                                                    <option value="">Select Classes</option>
-                                                    <option value="48">48</option>
-                                                    <option value="96">96</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="mb-3">
-                                                <label class="form-label">Effective Period</label>
-                                                <div class="form-control-plaintext" id="effective_period_display">
-                                                    Select program and effective date to see period
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-success" onclick="savePlan()" id="savePlanBtn">Add Plan</button>
-                                        <button type="button" class="btn btn-secondary" onclick="togglePlanAdd()">Cancel</button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -498,8 +329,8 @@
                                 <i class="fas fa-plus"></i> Add Entry
                             </button>
                         </div>
-                        <div class="table-responsive belt-history-container">
-                            <table class="table table-striped belt-history-table" id="beltHistoryTable">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="beltHistoryTable">
                                 <thead>
                                     <tr>
                                         <th>Date Obtained</th>
@@ -614,14 +445,7 @@
                         <label for="date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="date" name="date" required value="{{ today }}">
                     </div>
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="present">Present</option>
-                            <option value="absent">Absent</option>
-                            <option value="late">Late</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="status" name="status" value="present">
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional notes"></textarea>
@@ -632,6 +456,82 @@
                     <button type="submit" class="btn btn-outline-primary">Save Attendance</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Attendance Modal -->
+<div class="modal fade" id="editAttendanceModal" tabindex="-1" aria-labelledby="editAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAttendanceModalLabel">Edit Attendance Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit_attendance_id">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="edit_attendance_date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="edit_attendance_date">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_attendance_free_class">
+                                <label class="form-check-label" for="edit_attendance_free_class">
+                                    Free Class (doesn't count towards plan)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="edit_attendance_notes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="edit_attendance_notes" rows="4" placeholder="Enter notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-primary" onclick="saveAttendanceChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit History Modal -->
+<div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-labelledby="auditHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="auditHistoryModalLabel">Audit History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Changed By</th>
+                                <th>Action</th>
+                                <th>Field</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditHistoryBody">
+                            <!-- Audit history will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -683,14 +583,7 @@ document.getElementById('profilePicture').addEventListener('change', function(e)
 
 // Handle crop and upload
 document.getElementById('cropButton').addEventListener('click', function() {
-    const fileInput = document.getElementById('profilePicture');
-    if (!fileInput.files || fileInput.files.length === 0) {
-        alert('Please select a file first before cropping and uploading.');
-        return;
-    }
-    
     if (!cropper) {
-        alert('Please select a file first before cropping and uploading.');
         return;
     }
     
@@ -800,11 +693,13 @@ function savePersonalInfo() {
         first_name: document.getElementById('edit_first_name').value,
         last_name: document.getElementById('edit_last_name').value,
         email: document.getElementById('edit_email').value,
-        date_of_birth: document.getElementById('edit_date_of_birth').value || null,
-        gender: document.getElementById('edit_gender').value || null,
-        phone_number: document.getElementById('edit_phone_number').value || null,
-        belt_level: document.getElementById('edit_belt_level').value || null
+        program: document.getElementById('edit_program').value || null,
+        plan: document.getElementById('edit_plan').value || null,
+        effective_from: document.getElementById('edit_effective_from').value || null,
+        effective_to: document.getElementById('edit_effective_to').value || null,
+        classes: document.getElementById('edit_classes').value || null
     };
+    
     fetch(`/student/{{ student.id }}/update_personal_info`, {
         method: 'POST',
         headers: {
@@ -817,22 +712,6 @@ function savePersonalInfo() {
         if (data.success) {
             // Update the display with new values
             updatePersonalInfoDisplay(formData);
-            // Update belt color display and indicator
-            const newBeltLevel = formData.belt_level;
-            const beltLevelDisplay = document.getElementById('beltLevelDisplay');
-            beltLevelDisplay.textContent = newBeltLevel;
-            const beltLevelContainer = beltLevelDisplay.parentElement;
-            let existingIndicator = beltLevelContainer.querySelector('.belt-indicator');
-            if (existingIndicator) {
-                existingIndicator.remove();
-            }
-            if (newBeltLevel && newBeltLevel !== 'Not Set' && newBeltLevel !== 'No Belt') {
-                const newIndicator = document.createElement('div');
-                newIndicator.className = `belt-indicator belt-${newBeltLevel.toLowerCase().replace('-', '-')}`;
-                newIndicator.style.cursor = 'pointer';
-                beltLevelContainer.insertBefore(newIndicator, beltLevelDisplay);
-            }
-            loadBeltHistory(); // Refresh Belt History table
             togglePersonalInfoEdit();
             alert('Personal information updated successfully!');
         } else {
@@ -845,6 +724,8 @@ function savePersonalInfo() {
     });
 }
 
+
+
 function updatePersonalInfoDisplay(data) {
     // Update first column display
     const firstColumnTable = document.querySelector('#personalInfoDisplay table');
@@ -852,29 +733,28 @@ function updatePersonalInfoDisplay(data) {
     firstColumnTable.querySelector('tr:nth-child(2) td').textContent = data.last_name;
     firstColumnTable.querySelector('tr:nth-child(3) td').textContent = data.email;
     firstColumnTable.querySelector('tr:nth-child(4) td').textContent = data.username;
-    firstColumnTable.querySelector('tr:nth-child(5) td').textContent = data.date_of_birth ? data.date_of_birth : 'Not Set';
-    firstColumnTable.querySelector('tr:nth-child(6) td').textContent = data.gender || 'Not Set';
-    firstColumnTable.querySelector('tr:nth-child(7) td').textContent = data.phone_number || 'Not Set';
     
+    // Update second column display
+    const secondColumnTable = document.querySelector('#personalInfoDisplay2 table');
+    secondColumnTable.querySelector('tr:nth-child(1) td').textContent = data.program || 'Not Set';
+    secondColumnTable.querySelector('tr:nth-child(2) td').textContent = data.plan || 'Not Set';
+    
+    // Update Effective field
+    const effectiveCell = secondColumnTable.querySelector('tr:nth-child(3) td');
+    if (data.effective_from || data.effective_to) {
+        const fromDate = data.effective_from ? data.effective_from : 'Not Set';
+        const toDate = data.effective_to ? data.effective_to : 'Not Set';
+        effectiveCell.textContent = `${fromDate} to ${toDate}`;
+    } else {
+        effectiveCell.textContent = 'Not Set';
+    }
+    
+    secondColumnTable.querySelector('tr:nth-child(4) td').textContent = data.classes || 'Not Set';
     // Belt level is handled separately by the belt level update function
 }
 
-// Phone number formatting for edit form
+// Load belt history on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const phoneInput = document.getElementById('edit_phone_number');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-            if (value.length >= 6) {
-                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-            } else if (value.length >= 3) {
-                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
-            }
-            e.target.value = value;
-        });
-    }
-    
-    // Load belt history on page load
     loadBeltHistory();
 });
 
@@ -903,11 +783,7 @@ function displayBeltHistory(beltHistory) {
         return;
     }
     
-    const maxVisible = 5;
-    const hasMore = beltHistory.length > maxVisible;
-    const visibleEntries = hasMore ? beltHistory.slice(0, maxVisible) : beltHistory;
-    
-    visibleEntries.forEach(entry => {
+    beltHistory.forEach(entry => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${entry.date_obtained}</td>
@@ -926,23 +802,6 @@ function displayBeltHistory(beltHistory) {
         `;
         tbody.appendChild(row);
     });
-    
-    // Add "See More/Less" functionality
-    if (hasMore) {
-        const seeMoreRow = document.createElement('tr');
-        seeMoreRow.innerHTML = `
-            <td colspan="3" class="text-center">
-                <button class="btn btn-link" onclick="toggleBeltHistoryView()" id="beltHistoryToggleBtn">
-                    See More... (${beltHistory.length - maxVisible} more entries)
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeMoreRow);
-        
-        // Store all entries for toggling
-        window.allBeltHistory = beltHistory;
-        window.beltHistoryViewExpanded = false;
-    }
 }
 
 function toggleBeltHistoryAdd() {
@@ -1105,53 +964,6 @@ function closeBeltHistoryEdit() {
     }
 }
 
-function toggleBeltHistoryView() {
-    const tbody = document.getElementById('beltHistoryBody');
-    const toggleBtn = document.getElementById('beltHistoryToggleBtn');
-    
-    if (!window.allBeltHistory) return;
-    
-    if (!window.beltHistoryViewExpanded) {
-        // Show all entries
-        tbody.innerHTML = '';
-        window.allBeltHistory.forEach(entry => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${entry.date_obtained}</td>
-                <td>
-                    <div class="belt-indicator belt-${entry.belt_level.toLowerCase().replace('-', '-')}"></div>
-                    <span class="belt-level-text">${entry.belt_level}</span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editBeltHistory(${entry.id}, '${entry.belt_level}', '${entry.date_obtained}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBeltHistory(${entry.id})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-        // Add "See Less" button
-        const seeLessRow = document.createElement('tr');
-        seeLessRow.innerHTML = `
-            <td colspan="3" class="text-center">
-                <button class="btn btn-link" onclick="toggleBeltHistoryView()" id="beltHistoryToggleBtn">
-                    See Less...
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeLessRow);
-        
-        window.beltHistoryViewExpanded = true;
-    } else {
-        // Show only first 5 entries
-        displayBeltHistory(window.allBeltHistory);
-    }
-}
-
 function deleteBeltHistory(id) {
     if (!confirm('Are you sure you want to delete this belt history entry?')) {
         return;
@@ -1281,429 +1093,7 @@ function openMarkAttendanceModal(studentId, studentName) {
     modal.show();
 }
 
-// Plan functions
-function loadPlan() {
-    fetch(`/student/{{ student.id }}/plan`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displayPlan(data.plans);
-            } else {
-                console.error('Error loading plan:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-}
-
-function displayPlan(plans) {
-    const tbody = document.getElementById('planBody');
-    tbody.innerHTML = '';
-    
-    if (plans.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No plan entries found</td></tr>';
-        return;
-    }
-    
-    const maxVisible = 5;
-    const hasMore = plans.length > maxVisible;
-    const visiblePlans = hasMore ? plans.slice(0, maxVisible) : plans;
-    
-    visiblePlans.forEach(plan => {
-        const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${effectivePeriod}</td>
-            <td>${plan.program || 'Not Set'}</td>
-            <td>${plan.plan || 'Not Set'}</td>
-            <td class="text-center">${plan.classes || 'Not Set'}</td>
-            <td class="text-center" id="remaining-${plan.id}">Loading...</td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-        
-        // Fetch remaining classes for this plan
-        fetchRemainingClasses(plan.id);
-    });
-    
-    // Add "See More/Less" functionality
-    if (hasMore) {
-        const seeMoreRow = document.createElement('tr');
-        seeMoreRow.innerHTML = `
-            <td colspan="5" class="text-center">
-                <button class="btn btn-link" onclick="togglePlanView()" id="planToggleBtn">
-                    See More... (${plans.length - maxVisible} more entries)
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeMoreRow);
-        
-        // Store all plans for toggling
-        window.allPlans = plans;
-        window.planViewExpanded = false;
-    }
-}
-
-function calculateEffectivePeriod(effectiveDate, program) {
-    if (!effectiveDate || !program) {
-        return 'Not Set';
-    }
-    
-    const startDate = new Date(effectiveDate);
-    const endDate = new Date(startDate);
-    
-    switch (program) {
-        case '3 months':
-            endDate.setMonth(endDate.getMonth() + 3);
-            break;
-        case '6 months':
-            endDate.setMonth(endDate.getMonth() + 6);
-            break;
-        case '1 year':
-            endDate.setFullYear(endDate.getFullYear() + 1);
-            break;
-        default:
-            return effectiveDate;
-    }
-    
-    const startFormatted = startDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-    const endFormatted = endDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-    
-    return `${startFormatted} to ${endFormatted}`;
-}
-
-function togglePlanAdd() {
-    const form = document.getElementById('addPlanForm');
-    const btn = document.getElementById('addPlanBtn');
-    const title = document.getElementById('planFormTitle');
-    const saveBtn = document.getElementById('savePlanBtn');
-    const editingId = document.getElementById('editing_plan_id');
-    
-    if (form.style.display === 'none') {
-        form.style.display = 'block';
-        btn.innerHTML = '<i class="fas fa-minus"></i> Cancel';
-        
-        // Set default effective date to today if not editing
-        if (!editingId.value) {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('new_effective_date').value = today;
-            updateEffectiveEndDate();
-        }
-    } else {
-        form.style.display = 'none';
-        btn.innerHTML = '<i class="fas fa-plus"></i> Add Plan';
-        title.textContent = 'Add Plan Entry';
-        saveBtn.textContent = 'Add Plan';
-        editingId.value = '';
-        
-        // Clear form
-        document.getElementById('new_program').value = '';
-        document.getElementById('new_effective_date').value = '';
-        document.getElementById('new_plan').value = '';
-        document.getElementById('new_classes').value = '';
-        document.getElementById('effective_period_display').textContent = 'Select program and effective date to see period';
-    }
-}
-
-function updateEffectiveEndDate() {
-    const program = document.getElementById('new_program').value;
-    const effectiveDate = document.getElementById('new_effective_date').value;
-    const display = document.getElementById('effective_period_display');
-    
-    if (program && effectiveDate) {
-        const period = calculateEffectivePeriod(effectiveDate, program);
-        display.textContent = period;
-    } else {
-        display.textContent = 'Select program and effective date to see period';
-    }
-}
-
-function savePlan() {
-    const program = document.getElementById('new_program').value;
-    const effectiveDate = document.getElementById('new_effective_date').value;
-    const plan = document.getElementById('new_plan').value;
-    const classes = document.getElementById('new_classes').value;
-    const editingId = document.getElementById('editing_plan_id').value;
-    
-    if (!program || !effectiveDate || !plan || !classes) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    const url = editingId ? 
-        `/student/{{ student.id }}/plan/${editingId}` : 
-        `/student/{{ student.id }}/plan`;
-    
-    const method = editingId ? 'PUT' : 'POST';
-    
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            program: program,
-            effective_date: effectiveDate,
-            plan: plan,
-            classes: classes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadPlan();
-            togglePlanAdd();
-            alert(editingId ? 'Plan updated successfully!' : 'Plan added successfully!');
-        } else {
-            alert('Error saving plan: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving plan');
-    });
-}
-
-function editPlan(id, program, effectiveDate, plan, classes) {
-    // Create a modal-like form for editing
-    const editForm = document.createElement('div');
-    editForm.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1050;
-    `;
-    
-    const effectivePeriod = calculateEffectivePeriod(effectiveDate, program);
-    
-    editForm.innerHTML = `
-        <div class="card" style="width: 600px; max-width: 90vw;">
-            <div class="card-header">
-                <h6 class="card-title mb-0">Edit Plan Entry</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="edit_program_${id}" class="form-label">Program</label>
-                            <select class="form-select" id="edit_program_${id}" required onchange="updateEditEffectivePeriod(${id})">
-                                <option value="">Select Program</option>
-                                <option value="3 months" ${program === '3 months' ? 'selected' : ''}>3 months</option>
-                                <option value="6 months" ${program === '6 months' ? 'selected' : ''}>6 months</option>
-                                <option value="1 year" ${program === '1 year' ? 'selected' : ''}>1 year</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="edit_effective_date_${id}" class="form-label">Effective Date</label>
-                            <input type="date" class="form-control" id="edit_effective_date_${id}" value="${effectiveDate}" required onchange="updateEditEffectivePeriod(${id})">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="edit_plan_${id}" class="form-label">Plan</label>
-                            <select class="form-select" id="edit_plan_${id}" required>
-                                <option value="">Select Plan</option>
-                                <option value="1/week" ${plan === '1/week' ? 'selected' : ''}>1/week</option>
-                                <option value="2/week" ${plan === '2/week' ? 'selected' : ''}>2/week</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="edit_classes_${id}" class="form-label">Classes</label>
-                            <select class="form-select" id="edit_classes_${id}" required>
-                                <option value="">Select Classes</option>
-                                <option value="48" ${classes === '48' ? 'selected' : ''}>48</option>
-                                <option value="96" ${classes === '96' ? 'selected' : ''}>96</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="mb-3">
-                            <label class="form-label">Effective Period</label>
-                            <div class="form-control-plaintext" id="edit_effective_period_${id}">
-                                ${effectivePeriod}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-success" onclick="savePlanEdit(${id})">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" onclick="closePlanEdit()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(editForm);
-    
-    // Store the form reference for later use
-    window.currentEditForm = editForm;
-}
-
-
-
-function updateEditEffectivePeriod(id) {
-    const program = document.getElementById(`edit_program_${id}`).value;
-    const effectiveDate = document.getElementById(`edit_effective_date_${id}`).value;
-    const display = document.getElementById(`edit_effective_period_${id}`);
-    
-    if (program && effectiveDate) {
-        const period = calculateEffectivePeriod(effectiveDate, program);
-        display.textContent = period;
-    } else {
-        display.textContent = 'Select program and effective date to see period';
-    }
-}
-
-function savePlanEdit(id) {
-    const program = document.getElementById(`edit_program_${id}`).value;
-    const effectiveDate = document.getElementById(`edit_effective_date_${id}`).value;
-    const plan = document.getElementById(`edit_plan_${id}`).value;
-    const classes = document.getElementById(`edit_classes_${id}`).value;
-    
-    if (!program || !effectiveDate || !plan || !classes) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    fetch(`/student/{{ student.id }}/plan/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            program: program,
-            effective_date: effectiveDate,
-            plan: plan,
-            classes: classes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closePlanEdit();
-            loadPlan();
-            alert('Plan entry updated successfully!');
-        } else {
-            alert('Error updating plan entry: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating plan entry');
-    });
-}
-
-function closePlanEdit() {
-    if (window.currentEditForm) {
-        document.body.removeChild(window.currentEditForm);
-        window.currentEditForm = null;
-    }
-}
-
-function togglePlanView() {
-    const tbody = document.getElementById('planBody');
-    const toggleBtn = document.getElementById('planToggleBtn');
-    
-    if (!window.allPlans) return;
-    
-    if (!window.planViewExpanded) {
-        // Show all plans
-        tbody.innerHTML = '';
-        window.allPlans.forEach(plan => {
-            const effectivePeriod = calculateEffectivePeriod(plan.effective_date, plan.program);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${effectivePeriod}</td>
-                <td>${plan.program || 'Not Set'}</td>
-                <td>${plan.plan || 'Not Set'}</td>
-                <td class="text-center">${plan.classes || 'Not Set'}</td>
-                <td class="text-center" id="remaining-${plan.id}">Loading...</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editPlan(${plan.id}, '${plan.program}', '${plan.effective_date}', '${plan.plan}', '${plan.classes}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${plan.id})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-            
-            // Fetch remaining classes for this plan
-            fetchRemainingClasses(plan.id);
-        });
-        
-        // Add "See Less" button
-        const seeLessRow = document.createElement('tr');
-        seeLessRow.innerHTML = `
-            <td colspan="5" class="text-center">
-                <button class="btn btn-link" onclick="togglePlanView()" id="planToggleBtn">
-                    See Less...
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeLessRow);
-        
-        window.planViewExpanded = true;
-    } else {
-        // Show only first 5 plans
-        displayPlan(window.allPlans);
-    }
-}
-
-function deletePlan(id) {
-    if (!confirm('Are you sure you want to delete this plan entry?')) {
-        return;
-    }
-    
-    fetch(`/student/{{ student.id }}/plan/${id}`, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadPlan();
-            alert('Plan entry deleted successfully!');
-        } else {
-            alert('Error deleting plan entry: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error deleting plan entry');
-    });
-}
-
-// Load data when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadPlan();
-    loadAttendanceHistory();
-    // Pre-populate the add plan form with existing data if available
-    populatePlanForm();
-});
-
+// Attendance History functions
 function loadAttendanceHistory() {
     fetch(`/student/{{ student.id }}/attendance_history`)
         .then(response => response.json())
@@ -1715,269 +1105,158 @@ function loadAttendanceHistory() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error loading attendance history:', error);
         });
 }
 
 function displayAttendanceHistory(attendanceHistory) {
-    const tbody = document.getElementById('attendanceBody');
+    const tbody = document.getElementById('attendanceHistoryBody');
     tbody.innerHTML = '';
     
     if (attendanceHistory.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No attendance history found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No attendance records found</td></tr>';
         return;
     }
     
-    const maxVisible = 5;
-    const hasMore = attendanceHistory.length > maxVisible;
-    const visibleEntries = hasMore ? attendanceHistory.slice(0, maxVisible) : attendanceHistory;
-    
-    visibleEntries.forEach(entry => {
+    attendanceHistory.forEach(attendance => {
         const row = document.createElement('tr');
+        
+        // Format notes with free class indicator
+        let notesDisplay = attendance.notes || '';
+        if (attendance.free_class) {
+            notesDisplay = `[Free Class] ${notesDisplay}`;
+        }
+        
         row.innerHTML = `
-            <td>${entry.created_at}</td>
-            <td>${entry.notes || ''}</td>
-            <td>${entry.teacher_name}</td>
+            <td>${attendance.created_at}</td>
+            <td>${notesDisplay}</td>
+            <td>${attendance.teacher_name}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editAttendance(${attendance.id})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="viewAuditHistory(${attendance.id})">
+                    <i class="fas fa-history"></i> History
+                </button>
+            </td>
         `;
         tbody.appendChild(row);
     });
-    
-    // Add "See More/Less" functionality
-    if (hasMore) {
-        const seeMoreRow = document.createElement('tr');
-        seeMoreRow.innerHTML = `
-            <td colspan="3" class="text-center">
-                <button class="btn btn-link" onclick="toggleAttendanceHistoryView()" id="attendanceHistoryToggleBtn">
-                    See More... (${attendanceHistory.length - maxVisible} more entries)
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeMoreRow);
-        
-        // Store all entries for toggling
-        window.allAttendanceHistory = attendanceHistory;
-        window.attendanceHistoryViewExpanded = false;
-    }
 }
 
-function toggleAttendanceHistoryView() {
-    const tbody = document.getElementById('attendanceBody');
-    const toggleBtn = document.getElementById('attendanceHistoryToggleBtn');
+
+
+function editAttendance(attendanceId) {
+    fetch(`/attendance/${attendanceId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showEditAttendanceModal(data.attendance);
+            } else {
+                alert('Error loading attendance data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading attendance data:', error);
+            alert('Error loading attendance data');
+        });
+}
+
+function showEditAttendanceModal(attendance) {
+    // Populate the modal with attendance data
+    document.getElementById('edit_attendance_id').value = attendance.id;
+    document.getElementById('edit_attendance_notes').value = attendance.notes;
+    document.getElementById('edit_attendance_free_class').checked = attendance.free_class;
+    document.getElementById('edit_attendance_date').value = attendance.date;
     
-    if (!window.allAttendanceHistory) return;
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('editAttendanceModal'));
+    modal.show();
+}
+
+function saveAttendanceChanges() {
+    const attendanceId = document.getElementById('edit_attendance_id').value;
+    const notes = document.getElementById('edit_attendance_notes').value;
+    const freeClass = document.getElementById('edit_attendance_free_class').checked;
+    const date = document.getElementById('edit_attendance_date').value;
     
-    if (!window.attendanceHistoryViewExpanded) {
-        // Show all entries
-        tbody.innerHTML = '';
-        window.allAttendanceHistory.forEach(entry => {
+    fetch(`/attendance/${attendanceId}/edit`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            notes: notes,
+            free_class: freeClass,
+            date: date
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editAttendanceModal'));
+            modal.hide();
+            
+            // Reload attendance history
+            loadAttendanceHistory();
+            
+            // Show success message
+            alert('Attendance updated successfully!');
+        } else {
+            alert('Error updating attendance: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating attendance:', error);
+        alert('Error updating attendance');
+    });
+}
+
+function viewAuditHistory(attendanceId) {
+    fetch(`/attendance/${attendanceId}/audit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAuditHistoryModal(data.audit_history);
+            } else {
+                alert('Error loading audit history: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading audit history:', error);
+            alert('Error loading audit history');
+        });
+}
+
+function showAuditHistoryModal(auditHistory) {
+    const tbody = document.getElementById('auditHistoryBody');
+    tbody.innerHTML = '';
+    
+    if (auditHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No audit history found</td></tr>';
+    } else {
+        auditHistory.forEach(entry => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${entry.created_at}</td>
-                <td>${entry.notes || ''}</td>
-                <td>${entry.teacher_name}</td>
+                <td>${entry.changed_at}</td>
+                <td>${entry.changed_by}</td>
+                <td>${entry.action}</td>
+                <td>${entry.field_name || 'N/A'}</td>
+                <td>${entry.old_value || 'N/A'} → ${entry.new_value || 'N/A'}</td>
             `;
             tbody.appendChild(row);
         });
-        
-        // Add "See Less" button
-        const seeLessRow = document.createElement('tr');
-        seeLessRow.innerHTML = `
-            <td colspan="3" class="text-center">
-                <button class="btn btn-link" onclick="toggleAttendanceHistoryView()" id="attendanceHistoryToggleBtn">
-                    See Less...
-                </button>
-            </td>
-        `;
-        tbody.appendChild(seeLessRow);
-        
-        window.attendanceHistoryViewExpanded = true;
-    } else {
-        // Show only first 5 entries
-        displayAttendanceHistory(window.allAttendanceHistory);
-    }
-}
-
-function populatePlanForm() {
-    fetch(`/student/{{ student.id }}/plan`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.plans.length > 0) {
-                const plan = data.plans[0]; // Get the first plan
-                document.getElementById('new_program').value = plan.program || '';
-                document.getElementById('new_effective_date').value = plan.effective_date || '';
-                document.getElementById('new_plan').value = plan.plan || '';
-                document.getElementById('new_classes').value = plan.classes || '';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading plan data:', error);
-        });
-}
-
-function fetchRemainingClasses(planId) {
-    const studentId = {{ student.id }};
-    fetch(`/student/${studentId}/plan/${planId}/remaining`)
-        .then(response => response.json())
-        .then(data => {
-            const remainingCell = document.getElementById(`remaining-${planId}`);
-            if (data.success) {
-                // Create hyperlink for remaining classes
-                remainingCell.innerHTML = `<a href="#" onclick="showCalculationDetails(${planId}, ${data.remaining}, ${data.attended}, ${data.total}, '${data.effective_from}', '${data.effective_to}'); return false;">${data.remaining}</a>`;
-            } else {
-                remainingCell.textContent = 'N/A';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching remaining classes:', error);
-            const remainingCell = document.getElementById(`remaining-${planId}`);
-            remainingCell.textContent = 'Error';
-        });
-}
-
-function showCalculationDetails(planId, remaining, attended, total, effectiveFrom, effectiveTo) {
-    // Create modal HTML
-    const modalHtml = `
-        <div class="modal fade" id="calculationModal" tabindex="-1" aria-labelledby="calculationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="calculationModalLabel">Remaining Classes Calculation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <h6>Plan Details:</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Total Classes:</strong> ${total}</li>
-                                    <li><strong>Effective Period:</strong> ${effectiveFrom} to ${effectiveTo}</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Attendance Count:</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Classes Attended:</strong> ${attended}</li>
-                                    <li><strong>Remaining Classes:</strong> ${remaining}</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="attendance-history">
-                            <h6>Attendance History for This Period:</h6>
-                            <div id="attendanceHistoryList" class="mt-2">
-                                <div class="text-center">
-                                    <div class="spinner-border spinner-border-sm" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    <span class="ms-2">Loading attendance history...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('calculationModal');
-    if (existingModal) {
-        existingModal.remove();
     }
     
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Show modal using Bootstrap 5
-    const modal = new bootstrap.Modal(document.getElementById('calculationModal'));
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('auditHistoryModal'));
     modal.show();
-    
-    // Remove modal from DOM when hidden
-    document.getElementById('calculationModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
-    
-    // Load attendance history for this period
-    loadAttendanceHistoryForPeriod(effectiveFrom, effectiveTo);
 }
 
-function loadAttendanceHistoryForPeriod(effectiveFrom, effectiveTo) {
-    const studentId = {{ student.id }};
-    fetch(`/student/${studentId}/attendance_history`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Filter attendance records for the specific period
-                const startDate = new Date(effectiveFrom + ' 00:01:00');
-                const endDate = new Date(effectiveTo + ' 23:59:59');
-                
-                console.log('Filtering period:', effectiveFrom, 'to', effectiveTo);
-                console.log('Start date:', startDate);
-                console.log('End date:', endDate);
-                console.log('All attendance records:', data.attendance_history);
-                
-                const filteredAttendance = data.attendance_history.filter(entry => {
-                    // Parse the date string which includes "PT" timezone
-                    const dateStr = entry.created_at.replace(' PT', '');
-                    const entryDate = new Date(dateStr);
-                    
-                    console.log('Entry date:', entry.created_at, '->', entryDate);
-                    console.log('Is in range:', entryDate >= startDate && entryDate <= endDate);
-                    
-                    return entryDate >= startDate && entryDate <= endDate;
-                });
-                
-                console.log('Filtered attendance:', filteredAttendance);
-                displayAttendanceHistoryInModal(filteredAttendance);
-            } else {
-                document.getElementById('attendanceHistoryList').innerHTML = '<div class="alert alert-warning">Unable to load attendance history</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading attendance history:', error);
-            document.getElementById('attendanceHistoryList').innerHTML = '<div class="alert alert-danger">Error loading attendance history</div>';
-        });
-}
-
-function displayAttendanceHistoryInModal(attendanceHistory) {
-    const container = document.getElementById('attendanceHistoryList');
-    
-    if (attendanceHistory.length === 0) {
-        container.innerHTML = '<div class="alert alert-info">No attendance records found for this period</div>';
-        return;
-    }
-    
-    let html = '<div class="table-responsive"><table class="table table-sm table-striped">';
-    html += '<thead><tr><th style="width: 15%">Date</th><th style="width: 15%">Time</th><th style="width: 50%">Notes</th><th style="width: 20%">Teacher</th></tr></thead><tbody>';
-    
-    attendanceHistory.forEach(entry => {
-        // Parse the date string which includes "PT" timezone
-        const cleanDateStr = entry.created_at.replace(' PT', '');
-        const date = new Date(cleanDateStr);
-        
-        let displayDate, displayTime;
-        if (isNaN(date.getTime())) {
-            // Fallback if date parsing fails
-            displayDate = 'Invalid Date';
-            displayTime = 'Invalid Time';
-        } else {
-            displayDate = date.toLocaleDateString();
-            displayTime = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-        
-        html += `<tr>
-            <td>${displayDate}</td>
-            <td>${displayTime}</td>
-            <td>${entry.notes || ''}</td>
-            <td>${entry.teacher_name || ''}</td>
-        </tr>`;
-    });
-    
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-}
+// Load attendance history on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAttendanceHistory();
+});
 </script>
 {% endblock %} 

@@ -93,12 +93,27 @@ class Attendance(db.Model):
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False)  # 'present', 'absent', 'late'
     notes = db.Column(db.Text)
+    free_class = db.Column(db.Boolean, default=False)  # New field for free class toggle
     created_at = db.Column(db.DateTime, default=get_pacific_datetime)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     updated_at = db.Column(db.DateTime, default=get_pacific_datetime, onupdate=get_pacific_datetime)
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=True)  # Link to specific class
     check_in_time = db.Column(db.Time, nullable=True)  # Actual check-in time within class window
     check_in_method = db.Column(db.String(20), nullable=True)  # 'qr_code' or 'manual'
+
+class AttendanceAudit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    attendance_id = db.Column(db.Integer, db.ForeignKey('attendance.id'), nullable=False)
+    action = db.Column(db.String(20), nullable=False)  # 'created', 'updated', 'deleted'
+    field_name = db.Column(db.String(50), nullable=True)  # Which field was changed
+    old_value = db.Column(db.Text, nullable=True)  # Previous value
+    new_value = db.Column(db.Text, nullable=True)  # New value
+    changed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    changed_at = db.Column(db.DateTime, default=get_pacific_datetime)
+    
+    # Relationships
+    attendance = db.relationship('Attendance', backref='audit_history')
+    user = db.relationship('User', backref='attendance_audits')
 
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True)

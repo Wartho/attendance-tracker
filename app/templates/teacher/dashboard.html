@@ -206,14 +206,7 @@
                         <label for="date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="date" name="date" required value="{{ today }}">
                     </div>
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="present">Present</option>
-                            <option value="absent">Absent</option>
-                            <option value="late">Late</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="status" name="status" value="present">
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional notes"></textarea>

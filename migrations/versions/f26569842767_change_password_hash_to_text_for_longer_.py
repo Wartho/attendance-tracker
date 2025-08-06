@@ -17,10 +17,13 @@ depends_on = None
 
 
 def upgrade():
-    op.alter_column('user', 'password_hash', type_=sa.Text())
-    op.alter_column('user', 'classes', type_=sa.String(length=32))
+    # SQLite doesn't support ALTER COLUMN TYPE, so we need to recreate the table
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.alter_column('password_hash', type_=sa.Text())
+        batch_op.alter_column('classes', type_=sa.String(length=32))
 
 
 def downgrade():
-    op.alter_column('user', 'password_hash', type_=sa.String(length=128))
-    op.alter_column('user', 'classes', type_=sa.String(length=10))
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.alter_column('password_hash', type_=sa.String(length=128))
+        batch_op.alter_column('classes', type_=sa.String(length=10))

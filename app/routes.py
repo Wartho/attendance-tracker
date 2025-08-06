@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, jsonify, current_app, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Attendance, BeltHistory, Class
+from app.models import User, Attendance, BeltHistory, Class, AttendanceAudit
 from app.forms import RegistrationForm, AddStudentForm, ClassForm
 from datetime import datetime, time, timedelta
 import pytz
@@ -136,6 +136,18 @@ def mark_attendance():
                 created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
             )
             db.session.add(attendance)
+            db.session.flush()  # Get the attendance ID
+            
+            # Create audit entry for creation
+            audit_entry = AttendanceAudit(
+                attendance_id=attendance.id,
+                action='created',
+                field_name=None,
+                old_value=None,
+                new_value=None,
+                changed_by=current_user.id
+            )
+            db.session.add(audit_entry)
             db.session.commit()
             
             return jsonify({
@@ -180,6 +192,18 @@ def mark_attendance():
                     created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
                 )
                 db.session.add(attendance)
+                db.session.flush()  # Get the attendance ID
+                
+                # Create audit entry for creation
+                audit_entry = AttendanceAudit(
+                    attendance_id=attendance.id,
+                    action='created',
+                    field_name=None,
+                    old_value=None,
+                    new_value=None,
+                    changed_by=current_user.id
+                )
+                db.session.add(audit_entry)
                 
                 db.session.commit()
                 flash(f'Attendance marked for {student.first_name} {student.last_name}!', 'success')
@@ -214,6 +238,18 @@ def mark_attendance():
                             created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
                         )
                         db.session.add(attendance)
+                        db.session.flush()  # Get the attendance ID
+                        
+                        # Create audit entry for creation
+                        audit_entry = AttendanceAudit(
+                            attendance_id=attendance.id,
+                            action='created',
+                            field_name=None,
+                            old_value=None,
+                            new_value=None,
+                            changed_by=current_user.id
+                        )
+                        db.session.add(audit_entry)
                 
                 db.session.commit()
                 flash('Attendance marked successfully!', 'success')
@@ -263,6 +299,18 @@ def scan_qr():
             created_at=pacific_now.replace(tzinfo=None)  # Store as naive datetime in Pacific time
         )
         db.session.add(attendance)
+        db.session.flush()  # Get the attendance ID
+        
+        # Create audit entry for creation
+        audit_entry = AttendanceAudit(
+            attendance_id=attendance.id,
+            action='created',
+            field_name=None,
+            old_value=None,
+            new_value=None,
+            changed_by=current_user.id
+        )
+        db.session.add(audit_entry)
         db.session.commit()
         
         flash(f'Attendance marked for {student.username}.', 'success')
@@ -942,12 +990,13 @@ def get_plan_remaining(student_id, plan_id):
     start_datetime = datetime.combine(student.effective_from, time(0, 1))  # 12:01am
     end_datetime = datetime.combine(effective_to, time(23, 59))  # 11:59pm
     
-    # Count attended classes in the date range
+    # Count attended classes in the date range (excluding free classes)
     from app.models import Attendance
     attended_count = Attendance.query.filter(
         Attendance.student_id == student_id,
         Attendance.created_at >= start_datetime,
-        Attendance.created_at <= end_datetime
+        Attendance.created_at <= end_datetime,
+        Attendance.free_class == False  # Exclude free classes from plan calculation
     ).count()
     
     # Calculate remaining classes
@@ -1056,16 +1105,132 @@ def get_attendance_history(student_id):
             # Since created_at is stored as Pacific time (naive), we can format it directly
             # But we need to ensure it's treated as Pacific time, not UTC
             pacific_time = attendance.created_at
+            
+            # Don't add prefix here - let frontend handle it
+            notes_display = attendance.notes or ''
+            
             attendance_history.append({
                 'id': attendance.id,
                 'created_at': pacific_time.strftime('%Y-%m-%d %H:%M') + ' PT',
-                'notes': attendance.notes,
+                'notes': notes_display,
+                'free_class': attendance.free_class,
                 'teacher_name': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
             })
         
         return jsonify({'success': True, 'attendance_history': attendance_history})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error loading attendance history'}), 500 
+
+@main.route('/attendance/<int:attendance_id>/edit', methods=['GET', 'PUT'])
+@login_required
+def edit_attendance(attendance_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    attendance = Attendance.query.get_or_404(attendance_id)
+    
+    if request.method == 'GET':
+        # Return attendance data for editing
+        return jsonify({
+            'success': True,
+            'attendance': {
+                'id': attendance.id,
+                'notes': attendance.notes or '',
+                'free_class': attendance.free_class,
+                'date': attendance.date.strftime('%Y-%m-%d'),
+                'created_at': attendance.created_at.strftime('%Y-%m-%d %H:%M') + ' PT',
+                'created_by': f"{attendance.teacher.first_name} {attendance.teacher.last_name}" if attendance.teacher else 'Unknown'
+            }
+        })
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        try:
+            # Track changes for audit
+            changes = []
+            
+            # Update notes
+            if 'notes' in data and data['notes'] != attendance.notes:
+                old_notes = attendance.notes
+                attendance.notes = data['notes']
+                changes.append({
+                    'field_name': 'notes',
+                    'old_value': old_notes,
+                    'new_value': data['notes']
+                })
+            
+            # Update free_class
+            if 'free_class' in data and data['free_class'] != attendance.free_class:
+                old_free_class = attendance.free_class
+                attendance.free_class = data['free_class']
+                changes.append({
+                    'field_name': 'free_class',
+                    'old_value': str(old_free_class),
+                    'new_value': str(data['free_class'])
+                })
+            
+            # Update date
+            if 'date' in data:
+                new_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+                if new_date != attendance.date:
+                    old_date = attendance.date
+                    attendance.date = new_date
+                    changes.append({
+                        'field_name': 'date',
+                        'old_value': old_date.strftime('%Y-%m-%d'),
+                        'new_value': data['date']
+                    })
+            
+
+            
+            # Create audit entries for each change
+            for change in changes:
+                audit_entry = AttendanceAudit(
+                    attendance_id=attendance.id,
+                    action='updated',
+                    field_name=change['field_name'],
+                    old_value=change['old_value'],
+                    new_value=change['new_value'],
+                    changed_by=current_user.id
+                )
+                db.session.add(audit_entry)
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Attendance updated successfully'})
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': 'Error updating attendance'}), 500
+
+@main.route('/attendance/<int:attendance_id>/audit', methods=['GET'])
+@login_required
+def get_attendance_audit(attendance_id):
+    if not current_user.is_teacher():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    attendance = Attendance.query.get_or_404(attendance_id)
+    
+    try:
+        # Get all audit entries for this attendance record
+        audit_entries = AttendanceAudit.query.filter_by(attendance_id=attendance_id).order_by(AttendanceAudit.changed_at.desc()).all()
+        
+        audit_history = []
+        for entry in audit_entries:
+            audit_history.append({
+                'action': entry.action,
+                'field_name': entry.field_name,
+                'old_value': entry.old_value,
+                'new_value': entry.new_value,
+                'changed_by': f"{entry.user.first_name} {entry.user.last_name}" if entry.user else 'Unknown',
+                'changed_at': entry.changed_at.strftime('%Y-%m-%d %H:%M') + ' PT'
+            })
+        
+        return jsonify({'success': True, 'audit_history': audit_history})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error loading audit history'}), 500
 
 @main.route('/reports')
 @login_required
