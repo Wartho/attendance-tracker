@@ -69,29 +69,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    {{ form.date_of_birth.label(class="form-label") }}
-                                    {{ form.date_of_birth(class="form-control") }}
-                                    {% for error in form.date_of_birth.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     {{ form.program.label(class="form-label") }}
                                     {{ form.program(class="form-select") }}
                                     {% for error in form.program.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    {{ form.gender.label(class="form-label") }}
-                                    {{ form.gender(class="form-select") }}
-                                    {% for error in form.gender.errors %}
                                     <span class="text-danger">{{ error }}</span>
                                     {% endfor %}
                                 </div>
