@@ -612,9 +612,15 @@ def upload_profile_picture(student_id):
         upload_folder = os.path.join(current_app.static_folder, 'profile_pictures')
         os.makedirs(upload_folder, exist_ok=True)
         
-        # Secure the filename and add student ID to make it unique
-        filename = secure_filename(file.filename)
-        filename = f"{student_id}_{filename}"
+        # For cropped images, use a consistent filename with student ID
+        if file.filename == 'cropped.jpg':
+            filename = f"{student_id}_cropped.jpg"
+        else:
+            # Secure the filename and add student ID to make it unique
+            filename = secure_filename(file.filename)
+            filename = f"{student_id}_{filename}"
+        
+        print(f"Uploading file: {file.filename} -> {filename}")  # Debug print
         
         # Save the file
         filepath = os.path.join(upload_folder, filename)
@@ -653,6 +659,7 @@ def upload_profile_picture(student_id):
                 
                 # Update student's profile picture in database
                 student.profile_picture = filename
+                print(f"Saving to database: {filename}")  # Debug print
                 db.session.commit()
                 
                 flash('Profile picture uploaded successfully.', 'success')

@@ -97,6 +97,7 @@
                             <div class="text-center">
                                 <div class="profile-picture-container" data-bs-toggle="modal" data-bs-target="#uploadModal">
                                     {% if student.profile_picture %}
+                                        <!-- Debug: {{ student.profile_picture }} -->
                                         <img src="{{ url_for('static', filename='profile_pictures/' + student.profile_picture) }}" 
                                              alt="Profile Picture" 
                                              class="img-thumbnail"
