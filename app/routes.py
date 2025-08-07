@@ -608,10 +608,6 @@ def upload_profile_picture(student_id):
         return redirect(url_for('main.student_calendar', student_id=student_id))
     
     if file:
-        # Create profile_pictures directory if it doesn't exist
-        upload_folder = os.path.join(current_app.static_folder, 'profile_pictures')
-        os.makedirs(upload_folder, exist_ok=True)
-        
         # For cropped images, use a consistent filename with student ID
         if file.filename == 'cropped.jpg':
             filename = f"{student_id}_cropped.jpg"
@@ -622,13 +618,13 @@ def upload_profile_picture(student_id):
         
         print(f"Uploading file: {file.filename} -> {filename}")  # Debug print
         
-        # Save the file
-        filepath = os.path.join(upload_folder, filename)
-        file.save(filepath)
-        
-        # Process the image
+        # Process the image in memory
         try:
-            with Image.open(filepath) as img:
+            # Read the file data
+            file_data = file.read()
+            file.seek(0)  # Reset file pointer for PIL
+            
+            with Image.open(file) as img:
                 # Convert to RGB if necessary
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
@@ -655,10 +651,19 @@ def upload_profile_picture(student_id):
                 
                 # Resize to target dimensions
                 img = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
-                img.save(filepath)
+                
+                # Convert to base64
+                import base64
+                from io import BytesIO
+                
+                buffer = BytesIO()
+                img.save(buffer, format='JPEG', quality=85)
+                img_data = buffer.getvalue()
+                base64_data = base64.b64encode(img_data).decode('utf-8')
                 
                 # Update student's profile picture in database
                 student.profile_picture = filename
+                student.profile_picture_data = base64_data
                 print(f"Saving to database: {filename}")  # Debug print
                 db.session.commit()
                 
@@ -668,6 +673,25 @@ def upload_profile_picture(student_id):
             return redirect(url_for('main.student_calendar', student_id=student_id))
     
     return redirect(url_for('main.student_calendar', student_id=student_id)) 
+
+@main.route('/profile_picture/<int:student_id>')
+def get_profile_picture(student_id):
+    """Serve profile picture as base64 data"""
+    student = User.query.get_or_404(student_id)
+    
+    if not student.profile_picture_data:
+        return '', 404
+    
+    # Return the base64 data as an image
+    import base64
+    from flask import Response
+    
+    try:
+        img_data = base64.b64decode(student.profile_picture_data)
+        return Response(img_data, mimetype='image/jpeg')
+    except Exception as e:
+        print(f"Error serving profile picture: {e}")
+        return '', 404
 
 @main.route('/student/<int:student_id>/update_belt_level', methods=['POST'])
 @login_required

@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=get_pacific_datetime)
     qr_code_id = db.Column(db.String(36), unique=True, name='uq_user_qr_code_id', default=lambda: str(uuid.uuid4()))
     profile_picture = db.Column(db.String(255))  # Store the filename of the profile picture
+    profile_picture_data = db.Column(db.Text)  # Store the base64 encoded image data
     belt_level = db.Column(db.String(20), default='No Belt')  # Default changed from 'Not Set' to 'No Belt'
     
     # New personal information fields

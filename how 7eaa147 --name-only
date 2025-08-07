@@ -1,0 +1,20 @@
+[33m7eaa147[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Add separate Plan section between Attendance Calendar and Belt History - Add Plan table with Program, Plan, Classes, Remaining, and Effective Period columns - Add clickable Calculate button that shows remaining classes - Integrate with existing get_plan_remaining API endpoint
+[33m6f30ad1[m Fix add student template - Remove date_of_birth and gender fields that no longer exist in form
+[33mf3435d9[m Fix migration to handle missing qr_code_id column in production database
+[33m7e017ea[m Fix attendance editing and Plan section display - Remove Back to Home button - Fix JavaScript syntax errors - Update attendance editing with free class toggle and date editing - Add audit history functionality - Fix Plan section visibility issues
+[33m98d3d73[m Fix Attendance Stats to display in reverse chronological order with most recent month on the left
+[33m16a384c[m Fix timezone handling for attendance recording and display to ensure Pacific timezone for California
+[33m7aa39d6[m Add Reports page with attendance report generation functionality
+[33m25382dc[m Add horizontal scrollbars for mobile responsiveness to all Student Profile sections
+[33m986cfa3[m Add Email, Username, and Phone Number fields to Personal Information edit form
+[33m798c506[m Right align Print QR and Mark buttons, remove Back to Home button
+[33mfd7b032[m Remove Date of Birth and Gender fields, rebalance Personal Information columns
+[33mc18efdb[m Center align Classes and Remaining columns in Plan table
+[33mbe48c24[m Adjust column widths in attendance history table - reduce Date/Time by 50%, increase Notes width
+[33m210325b[m Fix calculation details popup to work with Bootstrap 5
+[33m385ea95[m Add Remaining column to Plan section with attendance calculation
+[33mcc790da[m Swap Effective and Program columns in Plan section and order by effective date desc
+[33m155cc44[m Implement See More/Less functionality for Attendance History, Plan, and Belt History sections
+[33m2d7f314[m Implement popup modal for editing Plan entries similar to Belt History
+[33mc964ac1[m Add Edit and Delete text labels to Plan buttons and remove duplicate editPlan function
+[33mce9da55[m Migrate Program, Plan, Effective, and Classes fields from Personal Information to Plan section

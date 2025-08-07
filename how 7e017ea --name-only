@@ -1,0 +1,10 @@
+[33m7eaa147[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Add separate Plan section between Attendance Calendar and Belt History - Add Plan table with Program, Plan, Classes, Remaining, and Effective Period columns - Add clickable Calculate button that shows remaining classes - Integrate with existing get_plan_remaining API endpoint
+[33m7e017ea[m Fix attendance editing and Plan section display - Remove Back to Home button - Fix JavaScript syntax errors - Update attendance editing with free class toggle and date editing - Add audit history functionality - Fix Plan section visibility issues
+[33mc18efdb[m Center align Classes and Remaining columns in Plan table
+[33m385ea95[m Add Remaining column to Plan section with attendance calculation
+[33mcc790da[m Swap Effective and Program columns in Plan section and order by effective date desc
+[33m155cc44[m Implement See More/Less functionality for Attendance History, Plan, and Belt History sections
+[33m2d7f314[m Implement popup modal for editing Plan entries similar to Belt History
+[33mc964ac1[m Add Edit and Delete text labels to Plan buttons and remove duplicate editPlan function
+[33mce9da55[m Migrate Program, Plan, Effective, and Classes fields from Personal Information to Plan section
+[33m2d37b79[m Add Plan section to Student Profile with Program, Effective, Plan, and Classes fields
